@@ -4,14 +4,15 @@ Fifi fingerprints [`Server`](https://developer.mozilla.org/en-US/docs/Web/HTTP/H
 
 ## Background
 
-Recently, spring boot had a wide spreaded RCE vulnerability, known as [Spring4Shell](https://portswigger.net/daily-swig/spring4shell-microsoft-cisa-warn-of-limited-in-the-wild-exploitation) ([CVE-2022-22965](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-22965)).
+Recently, spring boot had a wide spreaded RCE vulnerability, known as [Spring4Shell](https://portswigger.net/daily-swig/spring4shell-microsoft-cisa-warn-of-limited-in-the-wild-exploitation) ([CVE-2022-22965](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-22965)). Due to the fact that modern web application are implemented based on micro service pattern, various paths of a domain may end up on different applications/containers/CDN. To limit the attack surface system administrator, DevOps Engineers and SRE's are highly interested in limiting the available information about a service in the public.
 
-Due to the fact that modern web application are implemented based on micro service pattern,
-various paths of a domain may end up on different applications/containers/CDN.
+This tool provide help  identifying irregulation in the [`Server`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Server) response headers from a given list of urls.
 
-To limit the attack surface system administrator, DevOps Engineers and SRE's are highly interested in limiting the available information about a service in the public.
+## Installation
 
-This tool provide a help to identify irregulation in the [`Server`](Fifi fingerprints [`Server`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Server) response headers from a given list of urls and groups them.
+```
+go install github.com/NodyHub/fifi@latest
+```
 
 ## Usage
 
@@ -37,10 +38,28 @@ Options:
      Wait ms between requests
 ```
 
-## Installation
+## Example output
+
+This example gives an indication about the hosting infrastructure from Snapchat
 
 ```
-go install github.com/NodyHub/fifi@latest
-```
+% fifi -v
+reading from stdin...
 
+https://gcp.api.snapchat.com/web/metrics
+https://scan.snapchat.com/
+https://store.snapchat.com/
+https://www.snapchat.com/vendors.bundle.js
+
+Collected 4 different urls, starting analysis
+API Gateway https://gcp.api.snapchat.com/web/metrics
+(none) https://scan.snapchat.com/
+Google Frontend https://store.snapchat.com/
+Google Frontend https://www.snapchat.com/vendors.bundle.js
+
+Summary:
+API Gateway 1 urls
+(none) 1 urls
+Google Frontend 2 urls
+```
 
