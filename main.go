@@ -174,6 +174,9 @@ func main() {
 	res := get_signature(*verbose, timeout, wait, authorization, cookie, host, useragent, unified_urls)
 
 	// Output result
+	if *verbose {
+		fmt.Println("\nSummary:")
+	}
 	for srv, subset := range res {
 		fmt.Printf("%s %v urls\n", srv, len(subset))
 	}
