@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -13,93 +12,92 @@ import (
 	"time"
 )
 
-// Filter function for slices
+// filter function for slices
 func filter(ss []string, test func(string) bool) (ret []string) {
 	for _, s := range ss {
 		if test(s) {
 			ret = append(ret, s)
 		}
 	}
+
 	return
 }
 
-// Read file line-by-line and assume that they are all urls
-func get_urls(input_file string) []string {
-
+// getUrls reads file line-by-line and assume that they are all urls
+func getUrls(inputFile string) ([]string, error) {
 	// Read while file content
-	fmt.Fprintf(os.Stderr, "Reading %s\n", input_file)
-	urls, err := ioutil.ReadFile(input_file)
+	log.Printf("Reading %s", inputFile)
+	urls, err := os.ReadFile(inputFile)
 	if err != nil {
-		log.Fatal(err)
-		return []string{}
+		return []string{}, err
 	}
 
 	// Filter empty lines
 	return filter(strings.Split(string(urls), "\n"), func(url string) bool {
 		return url != ""
-	})
+	}), nil
 }
 
-// read from strdin until eol
-func read_from_stdin() []string {
+// readFromStdin reads from stdin until eol
+func readFromStdin() ([]string, error) {
 	var urls []string
 	in := bufio.NewReader(os.Stdin)
 	for {
 		s, err := in.ReadString('\n')
 		if err != nil {
-
 			if err != io.EOF {
-				log.Fatal(err)
+				return nil, err
 			}
 			break
 		}
-		urls = append(urls, strings.TrimSpace(s))
+
+		url := strings.TrimSpace(s)
+		if url != "" {
+			urls = append(urls, url)
+		}
 	}
-	// Filter empty lines
-	return filter(urls, func(url string) bool {
-		return url != ""
-	})
+
+	return urls, nil
 }
 
-func get_signature(verbose bool, timeout, wait *int, authorization, cookie, host, useragent *string, urls map[string]bool) map[string][]string {
-
+func getSignature(verbose bool, timeout, wait int, authorization, cookie, host, useragent string, urls map[string]struct{}) (map[string][]string, error) {
 	result := make(map[string][]string)
 
 	client := http.Client{
-		Timeout: time.Duration(*timeout) * time.Second,
+		Timeout: time.Duration(timeout) * time.Second,
 	}
 
 	for url := range urls {
-
 		// Declare HTTP Method and Url
 		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return nil, err
+		}
 
 		// Set Auth
-		if len(*authorization) > 0 {
-			req.Header.Add("Authorization", *authorization)
+		if len(authorization) > 0 {
+			req.Header.Add("Authorization", authorization)
 		}
 
 		// Set Cookie
-		if len(*cookie) > 0 {
-			req.Header.Add("Cookie", *cookie)
+		if len(cookie) > 0 {
+			req.Header.Add("Cookie", cookie)
 		}
 
 		// Set Host
-		if len(*host) > 0 {
-			req.Host = *host
+		if len(host) > 0 {
+			req.Host = host
 		}
 
 		// Set UserAgent
-		if len(*useragent) > 0 {
-			req.Header.Add("User-Agent", *useragent)
+		if len(useragent) > 0 {
+			req.Header.Add("User-Agent", useragent)
 		}
 
 		// Perform get request
 		resp, err := client.Do(req)
-
 		if err != nil {
-			log.Fatal(err)
-			// return result
+			return nil, err
 		}
 
 		// Handle response and evaluate
@@ -108,8 +106,7 @@ func get_signature(verbose bool, timeout, wait *int, authorization, cookie, host
 			srv = "(none)"
 		}
 
-		_, exist := result[srv]
-		if exist {
+		if _, exist := result[srv]; exist {
 			result[srv] = append(result[srv], url)
 		} else {
 			result[srv] = []string{url}
@@ -119,12 +116,10 @@ func get_signature(verbose bool, timeout, wait *int, authorization, cookie, host
 			fmt.Printf("%s %s\n", srv, url)
 		}
 
-		time.Sleep(time.Duration(*wait) * time.Millisecond)
-
+		time.Sleep(time.Duration(wait) * time.Millisecond)
 	}
 
-	return result
-
+	return result, nil
 }
 
 const (
@@ -137,6 +132,8 @@ Options:
 )
 
 func main() {
+	log.SetOutput(flag.CommandLine.Output())
+
 	// Read cli param
 	authorization := flag.String("a", "", "Authorization")
 	cookie := flag.String("c", "", "Cookie")
@@ -146,32 +143,44 @@ func main() {
 	verbose := flag.Bool("v", false, "Verbose output")
 	wait := flag.Int("w", 0, "Wait ms between requests")
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), usage, os.Args[0])
+		log.Printf(usage, os.Args[0])
 		flag.PrintDefaults()
 	}
 	flag.Parse()
 	input := flag.Args()
 
 	// Get URLS
+	var err error
 	var urls []string
 	if len(input) == 0 {
-		fmt.Fprintf(os.Stderr, "reading from stdin...\n")
-		urls = read_from_stdin()
+		log.Println("reading from stdin...")
+		urls, err = readFromStdin()
+		if err != nil {
+			log.Fatal(err)
+		}
 	} else {
 		// Read files
 		for _, ifile := range input {
-			urls = append(urls, get_urls(ifile)...)
+			newURLs, err := getUrls(ifile)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			urls = append(urls, newURLs...)
 		}
 	}
 
 	// unify urls
-	unified_urls := make(map[string]bool) // New empty set
+	unifiedUrls := make(map[string]struct{}) // New empty set
 	for _, url := range urls {
-		unified_urls[url] = true // Add
+		unifiedUrls[url] = struct{}{} // Add
 	}
 
-	fmt.Fprintf(os.Stderr, "Collected %v different urls, starting analysis\n", len(unified_urls))
-	res := get_signature(*verbose, timeout, wait, authorization, cookie, host, useragent, unified_urls)
+	log.Printf("Collected %v different urls, starting analysis\n", len(unifiedUrls))
+	res, err := getSignature(*verbose, *timeout, *wait, *authorization, *cookie, *host, *useragent, unifiedUrls)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Output result
 	if *verbose {
@@ -180,5 +189,4 @@ func main() {
 	for srv, subset := range res {
 		fmt.Printf("%s %v urls\n", srv, len(subset))
 	}
-
 }
