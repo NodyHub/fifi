@@ -129,10 +129,10 @@ func get_signature(verbose bool, timeout, wait *int, authorization, cookie, host
 
 const (
 	usage = `usage: %s [files]
-Parse url's from stdin and fetch server banner.
+Parse urls and fetch Server banners.
 
 Options:
-[files] provide the url's in files.
+[files] provide the urls in files.
 `
 )
 
@@ -179,4 +179,3 @@ func main() {
 	}
 
 }
-
