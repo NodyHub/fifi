@@ -4,10 +4,12 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"hash/fnv"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 	"time"
 )
@@ -21,6 +23,13 @@ func filter(ss []string, test func(string) bool) (ret []string) {
 	}
 
 	return
+}
+
+// hash calulates the hash value of a given string
+func hash(s string) string {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return fmt.Sprint(h.Sum32())
 }
 
 // getUrls reads file line-by-line and assume that they are all urls
@@ -60,8 +69,9 @@ func readFromStdin() ([]string, error) {
 	return urls, nil
 }
 
-func getSignature(verbose bool, timeout, wait int, authorization, cookie, host, useragent string, urls map[string]struct{}) (map[string][]string, error) {
+func getSignature(verbose, simple bool, timeout, wait int, authorization, cookie, host, useragent string, urls map[string]struct{}) (map[string][]string, map[string][]string, error) {
 	result := make(map[string][]string)
+	headerMap := make(map[string][]string)
 
 	client := http.Client{
 		Timeout: time.Duration(timeout) * time.Second,
@@ -71,7 +81,7 @@ func getSignature(verbose bool, timeout, wait int, authorization, cookie, host, 
 		// Declare HTTP Method and Url
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		// Set Auth
@@ -97,13 +107,39 @@ func getSignature(verbose bool, timeout, wait int, authorization, cookie, host, 
 		// Perform get request
 		resp, err := client.Do(req)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		// Handle response and evaluate
+
 		srv := resp.Header.Get("Server")
 		if srv == "" {
 			srv = "(none)"
+		}
+		if !simple {
+			// Collect all server banner
+			var header []string
+			serverBanner := srv
+
+			// Get sorted list of all header entries
+			for headerEntry := range resp.Header {
+				header = append(header, headerEntry)
+			}
+			sort.Strings(header)
+
+			// Collect data and create server identifier
+			for _, h := range header {
+				srv = fmt.Sprintf("%s;%s(%v)", srv, h, len(resp.Header[h]))
+			}
+			srv = hash(srv)
+
+			// Add server Banner to header list
+			header = append(header, "")
+			copy(header[1:], header)
+			header[0] = serverBanner
+
+			// store for return
+			headerMap[srv] = header
 		}
 
 		if _, exist := result[srv]; exist {
@@ -119,7 +155,7 @@ func getSignature(verbose bool, timeout, wait int, authorization, cookie, host, 
 		time.Sleep(time.Duration(wait) * time.Millisecond)
 	}
 
-	return result, nil
+	return headerMap, result, nil
 }
 
 const (
@@ -137,6 +173,7 @@ func main() {
 	// Read cli param
 	authorization := flag.String("a", "", "Authorization")
 	cookie := flag.String("c", "", "Cookie")
+	simple := flag.Bool("s", false, "Server banner only grouping")
 	host := flag.String("H", "", "Host")
 	timeout := flag.Int("t", 1, "Timeout seconds")
 	useragent := flag.String("u", "", "User-Agent (default GoLang default)")
@@ -177,7 +214,7 @@ func main() {
 	}
 
 	log.Printf("Collected %v different urls, starting analysis\n", len(unifiedUrls))
-	res, err := getSignature(*verbose, *timeout, *wait, *authorization, *cookie, *host, *useragent, unifiedUrls)
+	header, res, err := getSignature(*verbose, *simple, *timeout, *wait, *authorization, *cookie, *host, *useragent, unifiedUrls)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -185,8 +222,20 @@ func main() {
 	// Output result
 	if *verbose {
 		fmt.Println("\nSummary:")
-	}
-	for srv, subset := range res {
-		fmt.Printf("%s %v urls\n", srv, len(subset))
+
+		// Iterate over all IDs
+		for id := range header {
+			fmt.Printf("ID: %s ; URLs: %v ; Server: %s\n", id, len(res[id]), header[id][0])
+
+			// Iterate over response header
+			for _, h := range header[id][1:] {
+				fmt.Printf(" - %s\n", h)
+			}
+		}
+
+	} else {
+		for srv, subset := range res {
+			fmt.Printf("%s %v urls\n", srv, len(subset))
+		}
 	}
 }
