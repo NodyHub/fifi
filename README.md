@@ -43,27 +43,55 @@ Options:
 
 This example gives an indication about the hosting infrastructure from Snapchat
 
-```
-% cat urls.lst | fifi -v -t 4 -w 500 | tee result.out
-2022/04/12 09:30:01 reading from stdin...
-2022/04/12 09:30:01 Collected 60 different urls, starting analysis
-2276290871 https://www.namecheap.com/cart
-511284460 https://www.namecheap.com/cart/ajax/SessionHandler.ashx?_=1649748094813
-3632238580 https://www.namecheap.com/cart/json/operation.aspx
-511284460 https://www.namecheap.com/cart/json/operation.aspx/GetALLIteminCart
-2116670402 https://www.namecheap.com/
-511284460 https://www.namecheap.com/api/v1/ncpl
+```shell
+% fifi -v -t 4 -w 500
+2022/04/12 10:00:55 reading from stdin...
 
+https://ap.www.namecheap.com/
+https://ap.www.namecheap.com/
+https://ap.www.namecheap.com/api
+https://ap.www.namecheap.com/api/v1
+https://ap.www.namecheap.com/api/v1/ncpl
+https://ap.www.namecheap.com/JavaScriptResourceHandler.axd
 [...]
+https://ap.www.namecheap.com/JavaScriptResourceHandler.axd?ResourceFilePathKey=AddressResFilePath&LocaleId=en-US&VarName=AddressClientRes&ResourceType=resx&ResourceMode=1;
+https://ap.www.namecheap.com/JavaScriptResourceHandler.axd?ResourceFilePathKey=DomainInfoFilePath&LocaleId=en-US&VarName=DomainInfoRes&ResourceType=resx&ResourceMode=1;
+https://ap.www.namecheap.com/JavaScriptResourceHandler.axd?ResourceFilePathKey=DomainTransferResFilePath&LocaleId=en-US&VarName=DomainTransferRes&ResourceType=resx&ResourceMode=1
+https://ap.www.namecheap.com/siteservices/navigationscript?fromCMS=true&fromCMSIdentity=6bdfe6b8-a8f1-45c6-81d3-b2a0dfb85786
 
-976437910 https://www.namecheap.com/myaccount/twofa/secondauth.aspx
-2571465822 https://www.namecheap.com/api/v1/ncpl/twofactorauth/uiauthenticate/checkAndUpdateUserLockStatus
-511284460 https://www.namecheap.com/cart/ajax/messagehandler.ashx
-976437910 https://www.namecheap.com/domains/registration/results/
-2276290871 https://www.namecheap.com/legal
+2022/04/12 10:01:22 Collected 41 different urls, starting analysis
+2022/04/12 10:01:24 3721722846 https://ap.www.namecheap.com/api/v1/ncpl/onepager
+2022/04/12 10:01:25 3476117615 https://ap.www.namecheap.com/api/v1/ncpl/usermanagement/uiuser/isAdminMode
+2022/04/12 10:01:26 3721722846 https://ap.www.namecheap.com/api/v1/ncpl/usermessages
+2022/04/12 10:01:28 3721722846 https://ap.www.namecheap.com/Domains/DomainList
+2022/04/12 10:01:31 3721722846 https://ap.www.namecheap.com/SiteServices/GetRecentMessagesJson
+2022/04/12 10:01:33 3721722846 https://ap.www.namecheap.com/api/v1
+[...]
+2022/04/12 10:02:12 304226790 https://ap.www.namecheap.com/siteservices/navigationscript
+2022/04/12 10:02:13 304226790 https://ap.www.namecheap.com/siteservices/navigationscript?_=1649748131855
+2022/04/12 10:02:14 2999348701 https://ap.www.namecheap.com/api/v1/ncpl/expiringsoon/getexpiringitemcount
 
 Summary:
-ID: 511284460 ; URLs: 11 ; Server: cloudflare
+ID: 304226790 ; URLs: 3 ; Server: cloudflare
+ - Cache-Control
+ - Cf-Cache-Status
+ - Cf-Ray
+ - Content-Type
+ - Date
+ - Expect-Ct
+ - Server
+ - Set-Cookie
+ - Strict-Transport-Security
+ - Vary
+ - X-Content-Type-Options
+ - X-Frame-Options
+ - X-Inst
+ - X-Xss-Protection
+https://ap.www.namecheap.com/siteservices/navigationscript
+https://ap.www.namecheap.com/siteservices/navigationscript?_=1649748131855
+https://ap.www.namecheap.com/siteservices/navigationscript?fromCMS=true&fromCMSIdentity=6bdfe6b8-a8f1-45c6-81d3-b2a0dfb85786
+
+ID: 3721722846 ; URLs: 22 ; Server: cloudflare
  - Access-Control-Allow-Credentials
  - Access-Control-Allow-Headers
  - Access-Control-Allow-Methods
@@ -80,7 +108,47 @@ ID: 511284460 ; URLs: 11 ; Server: cloudflare
  - X-Frame-Options
  - X-Inst
  - X-Xss-Protection
-ID: 2571465822 ; URLs: 5 ; Server: cloudflare
+https://ap.www.namecheap.com/
+https://ap.www.namecheap.com/?_gl=1*5eunvn*_ga*ODQyMzkyNzg5LjE2NDk3NDgwOTE.*_ga_7DMJMG20P8*MTY0OTc0ODA5MC4xLjAuMTY0OTc0ODA5MC42MA..&_ga=2.76907415.360072847.1649748091-842392789.1649748091
+https://ap.www.namecheap.com/Common
+https://ap.www.namecheap.com/Common/ncSplitButton
+https://ap.www.namecheap.com/Domains
+https://ap.www.namecheap.com/Domains/DomainList
+https://ap.www.namecheap.com/Domains/DomainList/DomainCategoryList
+https://ap.www.namecheap.com/Domains/DomainOnly
+https://ap.www.namecheap.com/Domains/GetDomainList
+https://ap.www.namecheap.com/SiteServices/GetRecentMessagesJson
+https://ap.www.namecheap.com/api
+https://ap.www.namecheap.com/api/v1
+https://ap.www.namecheap.com/api/v1/ncpl
+https://ap.www.namecheap.com/api/v1/ncpl/onepager
+https://ap.www.namecheap.com/api/v1/ncpl/usermanagement
+https://ap.www.namecheap.com/api/v1/ncpl/usermessages
+https://ap.www.namecheap.com/dashboard
+https://ap.www.namecheap.com/dashboard/GetBulkModifications
+https://ap.www.namecheap.com/dashboard/GetBulkModifications/
+https://ap.www.namecheap.com/domains/list
+https://ap.www.namecheap.com/domains/list/
+https://ap.www.namecheap.com/siteservices
+
+ID: 3476117615 ; URLs: 2 ; Server: cloudflare
+ - Cache-Control
+ - Cf-Cache-Status
+ - Cf-Ray
+ - Content-Type
+ - Date
+ - Expect-Ct
+ - Pragma
+ - Server
+ - Set-Cookie
+ - Strict-Transport-Security
+ - Vary
+ - X-Frame-Options
+ - X-Xss-Protection
+https://ap.www.namecheap.com/api/v1/ncpl/usermanagement/uiuser
+https://ap.www.namecheap.com/api/v1/ncpl/usermanagement/uiuser/isAdminMode
+
+ID: 2999348701 ; URLs: 5 ; Server: cloudflare
  - Cf-Cache-Status
  - Cf-Ray
  - Content-Type
@@ -90,68 +158,12 @@ ID: 2571465822 ; URLs: 5 ; Server: cloudflare
  - Set-Cookie
  - Strict-Transport-Security
  - Www-Authenticate
-ID: 976437910 ; URLs: 11 ; Server: cloudflare
- - Cf-Cache-Status
- - Cf-Ray
- - Content-Type
- - Date
- - Expect-Ct
- - Server
- - Set-Cookie
- - Strict-Transport-Security
- - Vary
- - X-Frame-Options
- - X-Xss-Protection
+https://ap.www.namecheap.com/api/v1/ncpl/expiringsoon/getexpiringitemcount
+https://ap.www.namecheap.com/api/v1/ncpl/gatewaydomainlist/CheckSyncDomainList
+https://ap.www.namecheap.com/api/v1/ncpl/gatewaydomainlist/getdomainsonly
+https://ap.www.namecheap.com/api/v1/ncpl/onepager/subscription/getonepagersubscriptions
+https://ap.www.namecheap.com/api/v1/ncpl/usermessages/user/getMessages
 
 [...]
 
-ID: 16678959 ; URLs: 1 ; Server: cloudflare
- - Cf-Cache-Status
- - Cf-Ray
- - Content-Type
- - Date
- - Expect-Ct
- - Server
- - Set-Cookie
- - Strict-Transport-Security
- - Vary
- - X-Frame-Options
- - X-Xss-Protection
-
-% cat result.out | grep 511284460
-511284460 https://www.namecheap.com/cart/ajax/SessionHandler.ashx?_=1649748094813
-511284460 https://www.namecheap.com/cart/json/operation.aspx/GetALLIteminCart
-511284460 https://www.namecheap.com/api/v1/ncpl/cart
-511284460 https://www.namecheap.com/cart/json/operation.aspx/GetCartTotalAndItemCount
-511284460 https://www.namecheap.com/api/v1/ncpl/twofactorauth
-511284460 https://www.namecheap.com/api/v1
-511284460 https://www.namecheap.com/api/v1/ncpl
-511284460 https://www.namecheap.com/api/v1/ncpl/usermessages
-511284460 https://www.namecheap.com/cart/ajax/SessionHandler.ashx
-511284460 https://www.namecheap.com/namecheap-opensearch.xml
-511284460 https://www.namecheap.com/cart/ajax/messagehandler.ashx
-ID: 511284460 ; URLs: 11 ; Server: cloudflare
-
-% cat README.md | grep 2571465822
-2571465822 https://www.namecheap.com/api/v1/ncpl/twofactorauth/uiauthenticate/getDeviceCodeStatus
-2571465822 https://www.namecheap.com/api/v1/ncpl/twofactorauth/uiauthenticate/getStatus
-2571465822 https://www.namecheap.com/api/v1/ncpl/usermessages/user/getMessages
-2571465822 https://www.namecheap.com/api/v1/ncpl/twofactorauth/uiauthenticate/verifyDeviceCode
-2571465822 https://www.namecheap.com/api/v1/ncpl/twofactorauth/uiauthenticate/checkAndUpdateUserLockStatus
-ID: 2571465822 ; URLs: 5 ; Server: cloudflare
-
-% cat README.md | grep 976437910
-976437910 https://www.namecheap.com/domains
-976437910 https://www.namecheap.com/myaccount/twofa/secondauth.aspx?ReturnUrl=https%3a%2f%2fap.www.namecheap.com
-976437910 https://www.namecheap.com/domains/registration/results?domain=foobar&_gl=1*twy0qe*_ga*ODQyMzkyNzg5LjE2NDk3NDgwOTE.*_ga_7DMJMG20P8*MTY0OTc0ODA5MC4xLjEuMTY0OTc0ODE1NC42MA..
-976437910 https://www.namecheap.com/twofa
-976437910 https://www.namecheap.com/twofa/device
-976437910 https://www.namecheap.com/domains/registration/results
-976437910 https://www.namecheap.com/twofa/device?ReturnUrl=https%3a%2f%2fap.www.namecheap.com
-976437910 https://www.namecheap.com/twofa/device?ReturnUrl=%2f%3f_gl%3d1*5eunvn*_ga*ODQyMzkyNzg5LjE2NDk3NDgwOTE.*_ga_7DMJMG20P8*MTY0OTc0ODA5MC4xLjAuMTY0OTc0ODA5MC42MA..%26_ga%3d2.76907415.360072847.1649748091-842392789.1649748091&_gl=1*5eunvn*_ga*ODQyMzkyNzg5LjE2NDk3NDgwOTE.*_ga_7DMJMG20P8*MTY0OTc0ODA5MC4xLjAuMTY0OTc0ODA5MC42MA..&_ga=2.76907415.360072847.1649748091-842392789.1649748091
-976437910 https://www.namecheap.com/domains/registration/results/?domain=foobar&_gl=1*twy0qe*_ga*ODQyMzkyNzg5LjE2NDk3NDgwOTE.*_ga_7DMJMG20P8*MTY0OTc0ODA5MC4xLjEuMTY0OTc0ODE1NC42MA..
-976437910 https://www.namecheap.com/myaccount/twofa/secondauth.aspx
-976437910 https://www.namecheap.com/domains/registration/results/
-ID: 976437910 ; URLs: 11 ; Server: cloudflare
 ```
-

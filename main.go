@@ -149,7 +149,7 @@ func getSignature(verbose, simple bool, timeout, wait int, authorization, cookie
 		}
 
 		if verbose {
-			fmt.Printf("%s %s\n", srv, url)
+			log.Printf("%s %s\n", srv, url)
 		}
 
 		time.Sleep(time.Duration(wait) * time.Millisecond)
@@ -202,7 +202,6 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
-
 			urls = append(urls, newURLs...)
 		}
 	}
@@ -231,9 +230,17 @@ func main() {
 			for _, h := range header[id][1:] {
 				fmt.Printf(" - %s\n", h)
 			}
+
+			// Iterate over urls
+			sort.Strings(res[id])
+			for _, url := range res[id] {
+				fmt.Println(url)
+			}
+			fmt.Println()
 		}
 
 	} else {
+		// print only the summary
 		for srv, subset := range res {
 			fmt.Printf("%s %v urls\n", srv, len(subset))
 		}
