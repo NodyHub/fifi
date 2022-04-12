@@ -69,7 +69,7 @@ func readFromStdin() ([]string, error) {
 	return urls, nil
 }
 
-func getSignature(verbose, simple bool, timeout, wait int, authorization, cookie, host, useragent string, urls map[string]struct{}) (map[string][]string, map[string][]string, error) {
+func getSignature(verbose, simple bool, timeout, wait int, authorization, cookie, host, method, useragent string, urls map[string]struct{}) (map[string][]string, map[string][]string, error) {
 	result := make(map[string][]string)
 	headerMap := make(map[string][]string)
 
@@ -79,7 +79,7 @@ func getSignature(verbose, simple bool, timeout, wait int, authorization, cookie
 
 	for url := range urls {
 		// Declare HTTP Method and Url
-		req, err := http.NewRequest("GET", url, nil)
+		req, err := http.NewRequest(method, url, nil)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -173,8 +173,9 @@ func main() {
 	// Read cli param
 	authorization := flag.String("a", "", "Authorization")
 	cookie := flag.String("c", "", "Cookie")
-	simple := flag.Bool("s", false, "Server banner only grouping")
+	method := flag.String("X", "GET", "Method")
 	host := flag.String("H", "", "Host")
+	simple := flag.Bool("s", false, "Server banner only grouping")
 	timeout := flag.Int("t", 1, "Timeout seconds")
 	useragent := flag.String("u", "", "User-Agent (default GoLang default)")
 	verbose := flag.Bool("v", false, "Verbose output")
@@ -213,7 +214,7 @@ func main() {
 	}
 
 	log.Printf("Collected %v different urls, starting analysis\n", len(unifiedUrls))
-	header, res, err := getSignature(*verbose, *simple, *timeout, *wait, *authorization, *cookie, *host, *useragent, unifiedUrls)
+	header, res, err := getSignature(*verbose, *simple, *timeout, *wait, *authorization, *cookie, *host, *method, *useragent, unifiedUrls)
 	if err != nil {
 		log.Fatal(err)
 	}

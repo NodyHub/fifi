@@ -25,6 +25,8 @@ Options:
 [files] provide the urls in files.
   -H string
     	Host
+  -X string
+    	Method (default "GET")
   -a string
     	Authorization
   -c string
