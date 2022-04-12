@@ -70,8 +70,8 @@ func readFromStdin() ([]string, error) {
 }
 
 func getSignature(verbose, simple bool, timeout, wait int, authorization, cookie, host, method, useragent string, urls map[string]struct{}) (map[string][]string, map[string][]string, error) {
-	result := make(map[string][]string)
 	headerMap := make(map[string][]string)
+	result := make(map[string][]string)
 
 	client := http.Client{
 		Timeout: time.Duration(timeout) * time.Second,
@@ -116,7 +116,15 @@ func getSignature(verbose, simple bool, timeout, wait int, authorization, cookie
 		if srv == "" {
 			srv = "(none)"
 		}
-		if !simple {
+
+		if simple {
+			if _, exist := headerMap[srv]; exist {
+				result[srv] = append(result[srv], url)
+			} else {
+				result[srv] = []string{url}
+				headerMap[srv] = []string{srv}
+			}
+		} else if !simple {
 			// Collect all server banner
 			var header []string
 			serverBanner := srv
