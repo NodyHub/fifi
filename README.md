@@ -1,6 +1,6 @@
 # Fifi
 
-Fifi fingerprints [`Server`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Server) response headers from a given list of urls and groups them.
+Fifi collects server response header (or the [`Server`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Server) banner) from a given list of urls and groups them.
 
 ## Background
 
@@ -16,7 +16,7 @@ go install github.com/NodyHub/fifi@latest
 
 ## Usage
 
-```
+```shell
 % fifi -h
 usage: fifi [files]
 Parse urls and fetch Server banners.
