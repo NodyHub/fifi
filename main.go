@@ -8,11 +8,70 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"os"
 	"sort"
 	"strings"
 	"time"
 )
+
+type headerEntry struct {
+	key   string
+	value string
+}
+
+type urlResponse struct {
+	Url           string
+	HeaderEntries []headerEntry
+	StatusCode    int
+	Status        string
+}
+
+// hash calulates the hash value of a given string
+func hash(s string) string {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+
+	return fmt.Sprint(h.Sum32())
+}
+
+func getResponseSignature(url urlResponse) string {
+	raw := "(none)"
+	for i, h := range url.HeaderEntries {
+		if i == 0 {
+			raw = h.key
+		} else {
+			raw = fmt.Sprintf("%s;%s", raw, h.key)
+		}
+	}
+
+	return hash(raw)
+}
+
+func getHeaders(response *http.Response) ([]headerEntry, error) {
+	res := make([]headerEntry, 0)
+	// Prepare counter if a header is contained multiple times in response
+	hdrCounter := make(map[string]int, 0)
+	// Iterate over raw response line-wise
+	rawResponse, err := httputil.DumpResponse(response, false)
+	if err != nil {
+		return nil, err
+	}
+	for _, row := range strings.Split(string(rawResponse), "\n") {
+		if len(row) > 0 {
+			field := strings.TrimSpace(strings.Split(row, ":")[0])
+			for h, v := range response.Header {
+				if strings.EqualFold(field, h) {
+					idx := hdrCounter[h]
+					res = append(res, headerEntry{h, v[idx]})
+					hdrCounter[h] = idx + 1
+				}
+			}
+		}
+	}
+
+	return res, nil
+}
 
 // filter function for slices
 func filter(ss []string, test func(string) bool) (ret []string) {
@@ -23,13 +82,6 @@ func filter(ss []string, test func(string) bool) (ret []string) {
 	}
 
 	return
-}
-
-// hash calulates the hash value of a given string
-func hash(s string) string {
-	h := fnv.New32a()
-	h.Write([]byte(s))
-	return fmt.Sprint(h.Sum32())
 }
 
 // getUrls reads file line-by-line and assume that they are all urls
@@ -69,9 +121,9 @@ func readFromStdin() ([]string, error) {
 	return urls, nil
 }
 
-func getSignature(verbose, simple bool, timeout, wait int, authorization, cookie, host, method, useragent string, urls map[string]struct{}) (map[string][]string, map[string][]string, error) {
-	headerMap := make(map[string][]string)
-	result := make(map[string][]string)
+func getSignature(verbose bool, timeout, wait int, authorization, cookie, host, method, useragent string, urls map[string]struct{}) (map[string][]urlResponse, error) {
+	// headerMap := make(map[string][]string)
+	result := make(map[string][]urlResponse)
 
 	client := http.Client{
 		Timeout: time.Duration(timeout) * time.Second,
@@ -81,7 +133,7 @@ func getSignature(verbose, simple bool, timeout, wait int, authorization, cookie
 		// Declare HTTP Method and Url
 		req, err := http.NewRequest(method, url, nil)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
 		// Set Auth
@@ -107,7 +159,7 @@ func getSignature(verbose, simple bool, timeout, wait int, authorization, cookie
 		// Perform get request
 		resp, err := client.Do(req)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
 		// Handle response and evaluate
@@ -117,53 +169,28 @@ func getSignature(verbose, simple bool, timeout, wait int, authorization, cookie
 			srv = "(none)"
 		}
 
-		if simple {
-			if _, exist := headerMap[srv]; exist {
-				result[srv] = append(result[srv], url)
-			} else {
-				result[srv] = []string{url}
-				headerMap[srv] = []string{srv}
-			}
-		} else if !simple {
-			// Collect all server banner
-			var header []string
-			serverBanner := srv
-
-			// Get sorted list of all header entries
-			for headerEntry := range resp.Header {
-				header = append(header, headerEntry)
-			}
-			sort.Strings(header)
-
-			// Collect data and create server identifier
-			for _, h := range header {
-				srv = fmt.Sprintf("%s;%s(%v)", srv, h, len(resp.Header[h]))
-			}
-			srv = hash(srv)
-
-			// Add server Banner to header list
-			header = append(header, "")
-			copy(header[1:], header)
-			header[0] = serverBanner
-
-			// store for return
-			headerMap[srv] = header
+		fmt.Println(url)
+		headers, err := getHeaders(resp)
+		if err != nil {
+			return nil, err
 		}
 
-		if _, exist := result[srv]; exist {
-			result[srv] = append(result[srv], url)
+		parsedResponse := urlResponse{url, headers, resp.StatusCode, resp.Status}
+		sig := getResponseSignature(parsedResponse)
+		if _, exist := result[sig]; exist {
+			result[sig] = append(result[sig], parsedResponse)
 		} else {
-			result[srv] = []string{url}
+			result[sig] = []urlResponse{parsedResponse}
 		}
 
 		if verbose {
-			log.Printf("%s %s\n", srv, url)
+			log.Printf("%s %s\n", sig, url)
 		}
 
 		time.Sleep(time.Duration(wait) * time.Millisecond)
 	}
 
-	return headerMap, result, nil
+	return result, nil
 }
 
 const (
@@ -183,7 +210,6 @@ func main() {
 	cookie := flag.String("c", "", "Cookie")
 	method := flag.String("X", "GET", "Method")
 	host := flag.String("H", "", "Host")
-	simple := flag.Bool("s", false, "Server banner only grouping")
 	timeout := flag.Int("t", 1, "Timeout seconds")
 	useragent := flag.String("u", "", "User-Agent (default GoLang default)")
 	verbose := flag.Bool("v", false, "Verbose output")
@@ -222,36 +248,36 @@ func main() {
 	}
 
 	log.Printf("Collected %v different urls, starting analysis\n", len(unifiedUrls))
-	header, res, err := getSignature(*verbose, *simple, *timeout, *wait, *authorization, *cookie, *host, *method, *useragent, unifiedUrls)
+	res, err := getSignature(*verbose, *timeout, *wait, *authorization, *cookie, *host, *method, *useragent, unifiedUrls)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Output result
-	if *verbose {
-		fmt.Println("\nSummary:")
+	fmt.Println("\nSummary:")
+	// Iterate over all Signatures
+	for sig, responses := range res {
+		fmt.Printf("Signature: %s ; URLs: %v\n", sig, len(responses))
 
-		// Iterate over all IDs
-		for id := range header {
-			fmt.Printf("ID: %s ; URLs: %v ; Server: %s\n", id, len(res[id]), header[id][0])
-
+		if *verbose {
 			// Iterate over response header
-			for _, h := range header[id][1:] {
-				fmt.Printf(" - %s\n", h)
+			for _, h := range responses[0].HeaderEntries {
+				fmt.Printf(" - %s\n", h.key)
 			}
+			fmt.Println("-----")
+			fmt.Println("Urls: ")
+			fmt.Println("-----")
 
-			// Iterate over urls
-			sort.Strings(res[id])
-			for _, url := range res[id] {
-				fmt.Println(url)
+			// Iterate over sorted list of urls
+			urls := make([]string, len(responses))
+			for i, r := range responses {
+				urls[i] = fmt.Sprintf("[%v] %s", r.StatusCode, r.Url)
 			}
-			fmt.Println()
-		}
-
-	} else {
-		// print only the summary
-		for srv, subset := range res {
-			fmt.Printf("%s %v urls\n", srv, len(subset))
+			sort.Strings(urls)
+			for _, u := range urls {
+				fmt.Println(u)
+			}
+			fmt.Println("-----")
 		}
 	}
 }
