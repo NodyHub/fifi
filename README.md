@@ -23,6 +23,7 @@ Parse urls and fetch Server banners.
 
 Options:
 [files] provide the urls in files.
+  -C	Crash on error
   -H string
     	Host
   -X string
@@ -31,7 +32,7 @@ Options:
     	Authorization
   -c string
     	Cookie
-  -s	Server banner only grouping
+  -j	Result as json
   -t int
     	Timeout seconds (default 1)
   -u string
@@ -46,126 +47,103 @@ Options:
 This example gives an indication about the hosting infrastructure from Snapchat
 
 ```shell
-% fifi -v -t 4 -w 500
-2022/04/12 10:00:55 reading from stdin...
-
-https://ap.www.namecheap.com/
-https://ap.www.namecheap.com/
-https://ap.www.namecheap.com/api
-https://ap.www.namecheap.com/api/v1
-https://ap.www.namecheap.com/api/v1/ncpl
-https://ap.www.namecheap.com/JavaScriptResourceHandler.axd
-[...]
-https://ap.www.namecheap.com/JavaScriptResourceHandler.axd?ResourceFilePathKey=AddressResFilePath&LocaleId=en-US&VarName=AddressClientRes&ResourceType=resx&ResourceMode=1;
-https://ap.www.namecheap.com/JavaScriptResourceHandler.axd?ResourceFilePathKey=DomainInfoFilePath&LocaleId=en-US&VarName=DomainInfoRes&ResourceType=resx&ResourceMode=1;
-https://ap.www.namecheap.com/JavaScriptResourceHandler.axd?ResourceFilePathKey=DomainTransferResFilePath&LocaleId=en-US&VarName=DomainTransferRes&ResourceType=resx&ResourceMode=1
-https://ap.www.namecheap.com/siteservices/navigationscript?fromCMS=true&fromCMSIdentity=6bdfe6b8-a8f1-45c6-81d3-b2a0dfb85786
-
-2022/04/12 10:01:22 Collected 41 different urls, starting analysis
-2022/04/12 10:01:24 3721722846 https://ap.www.namecheap.com/api/v1/ncpl/onepager
-2022/04/12 10:01:25 3476117615 https://ap.www.namecheap.com/api/v1/ncpl/usermanagement/uiuser/isAdminMode
-2022/04/12 10:01:26 3721722846 https://ap.www.namecheap.com/api/v1/ncpl/usermessages
-2022/04/12 10:01:28 3721722846 https://ap.www.namecheap.com/Domains/DomainList
-2022/04/12 10:01:31 3721722846 https://ap.www.namecheap.com/SiteServices/GetRecentMessagesJson
-2022/04/12 10:01:33 3721722846 https://ap.www.namecheap.com/api/v1
-[...]
-2022/04/12 10:02:12 304226790 https://ap.www.namecheap.com/siteservices/navigationscript
-2022/04/12 10:02:13 304226790 https://ap.www.namecheap.com/siteservices/navigationscript?_=1649748131855
-2022/04/12 10:02:14 2999348701 https://ap.www.namecheap.com/api/v1/ncpl/expiringsoon/getexpiringitemcount
+% cat bild.urls | fifi -v
+2022/04/14 18:02:41 reading from stdin...
+2022/04/14 18:02:41 Collected 19 different urls, starting analysis
+2022/04/14 18:02:41 1749586943 https://a.bildstatic.de/img/bild-spielt.93c47b6.svg
+2022/04/14 18:02:41 298926734 https://a.bildstatic.de/img/club-bremen.d75c8c1.svg
+2022/04/14 18:02:41 1749586943 https://a.bildstatic.de/img/bild-gutscheine.360142b.svg
+2022/04/14 18:02:41 1749586943 https://a.bildstatic.de/img/bild-vpn.51b780c.svg
+2022/04/14 18:02:41 1749586943 https://a.bildstatic.de/img/club-aue.20b5c70.svg
+2022/04/14 18:02:41 1749586943 https://a.bildstatic.de/img/club-augsburg.19aa74e.svg
+2022/04/14 18:02:41 1749586943 https://a.bildstatic.de/img/club-dortmund.1940fa3.svg
+2022/04/14 18:02:41 1749586943 https://a.bildstatic.de/img/club-dresden.caa901d.svg
+2022/04/14 18:02:41 298926734 https://a.bildstatic.de/breakingnews/index.json
+2022/04/14 18:02:42 3080683410 https://a.bildstatic.de/breakingnews
+2022/04/14 18:02:42 3080683410 https://a.bildstatic.de/img
+2022/04/14 18:02:42 1749586943 https://a.bildstatic.de/img/bild-deals.5e10a5e.svg
+2022/04/14 18:02:42 1749586943 https://a.bildstatic.de/img/bild-vergleich.b0589b9.svg
+2022/04/14 18:02:42 1749586943 https://a.bildstatic.de/img/club-darmstadt.bfca4d7.svg
+2022/04/14 18:02:42 1749586943 https://a.bildstatic.de/img/club-duesseldorf.7210a4c.svg
+2022/04/14 18:02:42 3080683410 https://a.bildstatic.de/
+2022/04/14 18:02:42 1749586943 https://a.bildstatic.de/img/club-bielefeld.9bd0726.svg
+2022/04/14 18:02:42 1749586943 https://a.bildstatic.de/img/club-bochum.0bba830.svg
+2022/04/14 18:02:42 1749586943 https://a.bildstatic.de/img/bild-jobs.d0f1b16.svg
 
 Summary:
-ID: 304226790 ; URLs: 3 ; Server: cloudflare
- - Cache-Control
- - Cf-Cache-Status
- - Cf-Ray
- - Content-Type
- - Date
- - Expect-Ct
- - Server
- - Set-Cookie
- - Strict-Transport-Security
- - Vary
- - X-Content-Type-Options
- - X-Frame-Options
- - X-Inst
- - X-Xss-Protection
-https://ap.www.namecheap.com/siteservices/navigationscript
-https://ap.www.namecheap.com/siteservices/navigationscript?_=1649748131855
-https://ap.www.namecheap.com/siteservices/navigationscript?fromCMS=true&fromCMSIdentity=6bdfe6b8-a8f1-45c6-81d3-b2a0dfb85786
-
-ID: 3721722846 ; URLs: 22 ; Server: cloudflare
- - Access-Control-Allow-Credentials
+Signature: 1749586943 ; URLs: 14
+ - Accept-Ranges
  - Access-Control-Allow-Headers
  - Access-Control-Allow-Methods
+ - Access-Control-Allow-Origin
+ - Access-Control-Expose-Headers
+ - Access-Control-Max-Age
  - Cache-Control
- - Cf-Cache-Status
- - Cf-Ray
  - Content-Type
  - Date
- - Expect-Ct
+ - Etag
+ - Expires
+ - Last-Modified
  - Server
- - Set-Cookie
- - Strict-Transport-Security
  - Vary
- - X-Frame-Options
- - X-Inst
- - X-Xss-Protection
-https://ap.www.namecheap.com/
-https://ap.www.namecheap.com/?_gl=1*5eunvn*_ga*ODQyMzkyNzg5LjE2NDk3NDgwOTE.*_ga_7DMJMG20P8*MTY0OTc0ODA5MC4xLjAuMTY0OTc0ODA5MC42MA..&_ga=2.76907415.360072847.1649748091-842392789.1649748091
-https://ap.www.namecheap.com/Common
-https://ap.www.namecheap.com/Common/ncSplitButton
-https://ap.www.namecheap.com/Domains
-https://ap.www.namecheap.com/Domains/DomainList
-https://ap.www.namecheap.com/Domains/DomainList/DomainCategoryList
-https://ap.www.namecheap.com/Domains/DomainOnly
-https://ap.www.namecheap.com/Domains/GetDomainList
-https://ap.www.namecheap.com/SiteServices/GetRecentMessagesJson
-https://ap.www.namecheap.com/api
-https://ap.www.namecheap.com/api/v1
-https://ap.www.namecheap.com/api/v1/ncpl
-https://ap.www.namecheap.com/api/v1/ncpl/onepager
-https://ap.www.namecheap.com/api/v1/ncpl/usermanagement
-https://ap.www.namecheap.com/api/v1/ncpl/usermessages
-https://ap.www.namecheap.com/dashboard
-https://ap.www.namecheap.com/dashboard/GetBulkModifications
-https://ap.www.namecheap.com/dashboard/GetBulkModifications/
-https://ap.www.namecheap.com/domains/list
-https://ap.www.namecheap.com/domains/list/
-https://ap.www.namecheap.com/siteservices
-
-ID: 3476117615 ; URLs: 2 ; Server: cloudflare
+-----
+Urls:
+-----
+[200] https://a.bildstatic.de/img/bild-deals.5e10a5e.svg
+[200] https://a.bildstatic.de/img/bild-gutscheine.360142b.svg
+[200] https://a.bildstatic.de/img/bild-jobs.d0f1b16.svg
+[200] https://a.bildstatic.de/img/bild-spielt.93c47b6.svg
+[200] https://a.bildstatic.de/img/bild-vergleich.b0589b9.svg
+[200] https://a.bildstatic.de/img/bild-vpn.51b780c.svg
+[200] https://a.bildstatic.de/img/club-aue.20b5c70.svg
+[200] https://a.bildstatic.de/img/club-augsburg.19aa74e.svg
+[200] https://a.bildstatic.de/img/club-bielefeld.9bd0726.svg
+[200] https://a.bildstatic.de/img/club-bochum.0bba830.svg
+[200] https://a.bildstatic.de/img/club-darmstadt.bfca4d7.svg
+[200] https://a.bildstatic.de/img/club-dortmund.1940fa3.svg
+[200] https://a.bildstatic.de/img/club-dresden.caa901d.svg
+[200] https://a.bildstatic.de/img/club-duesseldorf.7210a4c.svg
+-----
+Signature: 298926734 ; URLs: 2
+ - Content-Length
+ - Accept-Ranges
+ - Access-Control-Allow-Headers
+ - Access-Control-Allow-Methods
+ - Access-Control-Allow-Origin
+ - Access-Control-Expose-Headers
+ - Access-Control-Max-Age
  - Cache-Control
- - Cf-Cache-Status
- - Cf-Ray
  - Content-Type
  - Date
- - Expect-Ct
- - Pragma
+ - Etag
+ - Expires
+ - Last-Modified
  - Server
- - Set-Cookie
- - Strict-Transport-Security
  - Vary
- - X-Frame-Options
- - X-Xss-Protection
-https://ap.www.namecheap.com/api/v1/ncpl/usermanagement/uiuser
-https://ap.www.namecheap.com/api/v1/ncpl/usermanagement/uiuser/isAdminMode
-
-ID: 2999348701 ; URLs: 5 ; Server: cloudflare
- - Cf-Cache-Status
- - Cf-Ray
- - Content-Type
+-----
+Urls:
+-----
+[200] https://a.bildstatic.de/breakingnews/index.json
+[200] https://a.bildstatic.de/img/club-bremen.d75c8c1.svg
+-----
+Signature: 3080683410 ; URLs: 3
+ - Content-Length
+ - Accept-Ranges
+ - Access-Control-Allow-Headers
+ - Access-Control-Allow-Methods
+ - Access-Control-Allow-Origin
+ - Access-Control-Expose-Headers
+ - Access-Control-Max-Age
+ - Cache-Control
  - Date
- - Expect-Ct
+ - Expires
  - Server
- - Set-Cookie
- - Strict-Transport-Security
- - Www-Authenticate
-https://ap.www.namecheap.com/api/v1/ncpl/expiringsoon/getexpiringitemcount
-https://ap.www.namecheap.com/api/v1/ncpl/gatewaydomainlist/CheckSyncDomainList
-https://ap.www.namecheap.com/api/v1/ncpl/gatewaydomainlist/getdomainsonly
-https://ap.www.namecheap.com/api/v1/ncpl/onepager/subscription/getonepagersubscriptions
-https://ap.www.namecheap.com/api/v1/ncpl/usermessages/user/getMessages
-
-[...]
-
+ - Vary
+-----
+Urls:
+-----
+[404] https://a.bildstatic.de/
+[404] https://a.bildstatic.de/breakingnews
+[404] https://a.bildstatic.de/img
+-----
 ```
