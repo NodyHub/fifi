@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"hash/fnv"
@@ -16,8 +17,8 @@ import (
 )
 
 type headerEntry struct {
-	key   string
-	value string
+	Key   string
+	Value string
 }
 
 type urlResponse struct {
@@ -39,9 +40,9 @@ func getResponseSignature(url urlResponse) string {
 	raw := "(none)"
 	for i, h := range url.HeaderEntries {
 		if i == 0 {
-			raw = h.key
+			raw = h.Key
 		} else {
-			raw = fmt.Sprintf("%s;%s", raw, h.key)
+			raw = fmt.Sprintf("%s;%s", raw, h.Key)
 		}
 	}
 
@@ -209,6 +210,7 @@ func main() {
 	crash := flag.Bool("C", false, "Crash on error")
 	method := flag.String("X", "GET", "Method")
 	host := flag.String("H", "", "Host")
+	jsonOutput := flag.Bool("j", false, "Result as json")
 	timeout := flag.Int("t", 1, "Timeout seconds")
 	useragent := flag.String("u", "", "User-Agent (default GoLang default)")
 	verbose := flag.Bool("v", false, "Verbose output")
@@ -253,30 +255,38 @@ func main() {
 	}
 
 	// Output result
-	fmt.Println("\nSummary:")
-	// Iterate over all Signatures
-	for sig, responses := range res {
-		fmt.Printf("Signature: %s ; URLs: %v\n", sig, len(responses))
+	if *jsonOutput {
+		b, err := json.MarshalIndent(res, "", "  ")
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf(string(b))
+	} else {
+		fmt.Println("\nSummary:")
+		// Iterate over all Signatures
+		for sig, responses := range res {
+			fmt.Printf("Signature: %s ; URLs: %v\n", sig, len(responses))
 
-		if *verbose {
-			// Iterate over response header
-			for _, h := range responses[0].HeaderEntries {
-				fmt.Printf(" - %s\n", h.key)
-			}
-			fmt.Println("-----")
-			fmt.Println("Urls: ")
-			fmt.Println("-----")
+			if *verbose {
+				// Iterate over response header
+				for _, h := range responses[0].HeaderEntries {
+					fmt.Printf(" - %s\n", h.Key)
+				}
+				fmt.Println("-----")
+				fmt.Println("Urls: ")
+				fmt.Println("-----")
 
-			// Iterate over sorted list of urls
-			urls := make([]string, len(responses))
-			for i, r := range responses {
-				urls[i] = fmt.Sprintf("[%v] %s", r.StatusCode, r.Url)
+				// Iterate over sorted list of urls
+				urls := make([]string, len(responses))
+				for i, r := range responses {
+					urls[i] = fmt.Sprintf("[%v] %s", r.StatusCode, r.Url)
+				}
+				sort.Strings(urls)
+				for _, u := range urls {
+					fmt.Println(u)
+				}
+				fmt.Println("-----")
 			}
-			sort.Strings(urls)
-			for _, u := range urls {
-				fmt.Println(u)
-			}
-			fmt.Println("-----")
 		}
 	}
 }
