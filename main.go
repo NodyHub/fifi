@@ -121,7 +121,7 @@ func readFromStdin() ([]string, error) {
 	return urls, nil
 }
 
-func getSignature(verbose bool, timeout, wait int, authorization, cookie, host, method, useragent string, urls map[string]struct{}) (map[string][]urlResponse, error) {
+func getSignature(crash, verbose bool, timeout, wait int, authorization, cookie, host, method, useragent string, urls map[string]struct{}) (map[string][]urlResponse, error) {
 	// headerMap := make(map[string][]string)
 	result := make(map[string][]urlResponse)
 
@@ -159,17 +159,15 @@ func getSignature(verbose bool, timeout, wait int, authorization, cookie, host, 
 		// Perform get request
 		resp, err := client.Do(req)
 		if err != nil {
-			return nil, err
+			if crash {
+				return nil, err
+			} else {
+				log.Printf("ERROR: %s\n", err.Error())
+				continue
+			}
 		}
 
 		// Handle response and evaluate
-
-		srv := resp.Header.Get("Server")
-		if srv == "" {
-			srv = "(none)"
-		}
-
-		fmt.Println(url)
 		headers, err := getHeaders(resp)
 		if err != nil {
 			return nil, err
@@ -208,6 +206,7 @@ func main() {
 	// Read cli param
 	authorization := flag.String("a", "", "Authorization")
 	cookie := flag.String("c", "", "Cookie")
+	crash := flag.Bool("C", false, "Crash on error")
 	method := flag.String("X", "GET", "Method")
 	host := flag.String("H", "", "Host")
 	timeout := flag.Int("t", 1, "Timeout seconds")
@@ -248,9 +247,9 @@ func main() {
 	}
 
 	log.Printf("Collected %v different urls, starting analysis\n", len(unifiedUrls))
-	res, err := getSignature(*verbose, *timeout, *wait, *authorization, *cookie, *host, *method, *useragent, unifiedUrls)
+	res, err := getSignature(*crash, *verbose, *timeout, *wait, *authorization, *cookie, *host, *method, *useragent, unifiedUrls)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Sprintf("ERROR! %s", err.Error()))
 	}
 
 	// Output result
