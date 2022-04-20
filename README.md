@@ -18,7 +18,7 @@ go install github.com/NodyHub/fifi@latest
 
 ```shell
 [~/git/fifi]% fifi -h
-2022/04/20 10:22:32 usage: fifi [files]
+2022/04/20 10:42:48 usage: fifi [files]
 Parse urls and fetch Server banners.
 
 Options:
@@ -42,102 +42,108 @@ Options:
   -v	Verbose output
   -w int
     	Wait ms between requests
-[~/git/fifi]% cat bild.urls | fifi -v
-2022/04/20 10:22:34 reading from stdin...
-2022/04/20 10:22:34 Collected 19 different urls, starting analysis
-2022/04/20 10:22:35 3080683410 https://a.bildstatic.de/
-2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/club-bielefeld.9bd0726.svg
-2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/club-duesseldorf.7210a4c.svg
-2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/bild-deals.5e10a5e.svg
-2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/bild-jobs.d0f1b16.svg
-2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/bild-vergleich.b0589b9.svg
-2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/club-aue.20b5c70.svg
-2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/club-augsburg.19aa74e.svg
-2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/club-dortmund.1940fa3.svg
-2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/club-dresden.caa901d.svg
-2022/04/20 10:22:35 3080683410 https://a.bildstatic.de/breakingnews
-2022/04/20 10:22:35 298926734 https://a.bildstatic.de/breakingnews/index.json
-2022/04/20 10:22:35 3080683410 https://a.bildstatic.de/img
-2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/bild-spielt.93c47b6.svg
-2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/bild-vpn.51b780c.svg
-2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/bild-gutscheine.360142b.svg
-2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/club-bochum.0bba830.svg
-2022/04/20 10:22:35 298926734 https://a.bildstatic.de/img/club-bremen.d75c8c1.svg
-2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/club-darmstadt.bfca4d7.svg
+[~/git/fifi]% cat uber.url.lst  | fifi -v
+cat:  : No such file or directory
+2022/04/20 10:42:52 reading from stdin...
+2022/04/20 10:42:52 Collected 11 different urls, starting analysis
+2022/04/20 10:42:53 1128600947 https://auth.uber.com/login/?breeze_local_zone=dca1&state=0A-OdN1vuv_FDbpofRZqJg9maKASCY4k0kCRVEiSDGw%3D&uber_client_name=riderSignUp&uclick_id=840a8ddd-ac10-47e6-aec4-e492968acc42
+2022/04/20 10:42:53 148156071 https://auth.uber.com/login/social/
+2022/04/20 10:42:53 1128600947 https://auth.uber.com/login/session
+2022/04/20 10:42:53 148156071 https://auth.uber.com/login/social
+2022/04/20 10:42:54 ERROR (0): Get "https://auth.uber.com/login/social/?from=facebook&state=%257B%2522query%2522%3A%2522%3Fnext_url%3Dhttps%253A%252F%252Fm.uber.com%252F%26privileged_op_url%3Dhttps%253A%252F%252Fm.uber.com%252F%26uber_client_name%3Dm2%2522%252C%2522csrfToken%2522%253A%25221650443852-01-FNOsAwdU4I8HWkiFZuimbrTHjauX146ik_Hq9h7k1Ew%2522%252C%2522app%2522%253A%2522%2522%257D&response_type=token": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
+2022/04/20 10:42:55 ERROR (1): Get "https://auth.uber.com/login/social/?from=facebook&state=%257B%2522query%2522%3A%2522%3Fnext_url%3Dhttps%253A%252F%252Fm.uber.com%252F%26privileged_op_url%3Dhttps%253A%252F%252Fm.uber.com%252F%26uber_client_name%3Dm2%2522%252C%2522csrfToken%2522%253A%25221650443852-01-FNOsAwdU4I8HWkiFZuimbrTHjauX146ik_Hq9h7k1Ew%2522%252C%2522app%2522%253A%2522%2522%257D&response_type=token": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
+2022/04/20 10:42:57 ERROR (2): Get "https://auth.uber.com/login/social/?from=facebook&state=%257B%2522query%2522%3A%2522%3Fnext_url%3Dhttps%253A%252F%252Fm.uber.com%252F%26privileged_op_url%3Dhttps%253A%252F%252Fm.uber.com%252F%26uber_client_name%3Dm2%2522%252C%2522csrfToken%2522%253A%25221650443852-01-FNOsAwdU4I8HWkiFZuimbrTHjauX146ik_Hq9h7k1Ew%2522%252C%2522app%2522%253A%2522%2522%257D&response_type=token": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
+2022/04/20 10:43:00 maxRetry(3) reached, go to next url
+2022/04/20 10:43:00 264694073 https://auth.uber.com/
+2022/04/20 10:43:00 1128600947 https://auth.uber.com/login
+2022/04/20 10:43:01 1128600947 https://auth.uber.com/login/
+2022/04/20 10:43:01 1128600947 https://auth.uber.com/login/?breeze_local_zone=dca11&next_url=https%3A%2F%2Fm.uber.com%2F&state=NUUybaiHU9SIaKz56QjyvtJTz5CJC25zhhyocPV9guM%3D
+2022/04/20 10:43:01 1128600947 https://auth.uber.com/login/?next_url=https%3A%2F%2Fm.uber.com%2F&privileged_op_url=https%3A%2F%2Fm.uber.com%2F
+2022/04/20 10:43:01 1128600947 https://auth.uber.com/login/social/?next_url=https%3A%2F%2Fm.uber.com%2F&privileged_op_url=https%3A%2F%2Fm.uber.com%2F&uber_client_name=m2
 
 Summary:
-Signature: 3080683410 ; URLs: 3
- - Content-Length
- - Accept-Ranges
- - Access-Control-Allow-Headers
- - Access-Control-Allow-Methods
- - Access-Control-Allow-Origin
- - Access-Control-Expose-Headers
- - Access-Control-Max-Age
+Signature: 1128600947 ; URLs: 7
+ - Alt-Svc
  - Cache-Control
- - Date
- - Expires
- - Server
- - Vary
------
-Urls:
------
-[404] https://a.bildstatic.de/
-[404] https://a.bildstatic.de/breakingnews
-[404] https://a.bildstatic.de/img
------
-Signature: 1749586943 ; URLs: 14
- - Accept-Ranges
- - Access-Control-Allow-Headers
- - Access-Control-Allow-Methods
- - Access-Control-Allow-Origin
- - Access-Control-Expose-Headers
- - Access-Control-Max-Age
- - Cache-Control
+ - Content-Security-Policy
  - Content-Type
  - Date
  - Etag
- - Expires
- - Last-Modified
  - Server
+ - Set-Cookie
+ - Set-Cookie
+ - Strict-Transport-Security
+ - Timing-Allow-Origin
  - Vary
+ - Via
+ - X-Content-Security-Policy
+ - X-Content-Type-Options
+ - X-Csrf-Token
+ - X-Envoy-Upstream-Service-Time
+ - X-Frame-Options
+ - X-Uber-Edge
+ - X-Webkit-Csp
+ - X-Xss-Protection
 -----
 Urls:
 -----
-[200] https://a.bildstatic.de/img/bild-deals.5e10a5e.svg
-[200] https://a.bildstatic.de/img/bild-gutscheine.360142b.svg
-[200] https://a.bildstatic.de/img/bild-jobs.d0f1b16.svg
-[200] https://a.bildstatic.de/img/bild-spielt.93c47b6.svg
-[200] https://a.bildstatic.de/img/bild-vergleich.b0589b9.svg
-[200] https://a.bildstatic.de/img/bild-vpn.51b780c.svg
-[200] https://a.bildstatic.de/img/club-aue.20b5c70.svg
-[200] https://a.bildstatic.de/img/club-augsburg.19aa74e.svg
-[200] https://a.bildstatic.de/img/club-bielefeld.9bd0726.svg
-[200] https://a.bildstatic.de/img/club-bochum.0bba830.svg
-[200] https://a.bildstatic.de/img/club-darmstadt.bfca4d7.svg
-[200] https://a.bildstatic.de/img/club-dortmund.1940fa3.svg
-[200] https://a.bildstatic.de/img/club-dresden.caa901d.svg
-[200] https://a.bildstatic.de/img/club-duesseldorf.7210a4c.svg
+[200] https://auth.uber.com/login
+[200] https://auth.uber.com/login/
+[200] https://auth.uber.com/login/?breeze_local_zone=dca1&state=0A-OdN1vuv_FDbpofRZqJg9maKASCY4k0kCRVEiSDGw%3D&uber_client_name=riderSignUp&uclick_id=840a8ddd-ac10-47e6-aec4-e492968acc42
+[200] https://auth.uber.com/login/?breeze_local_zone=dca11&next_url=https%3A%2F%2Fm.uber.com%2F&state=NUUybaiHU9SIaKz56QjyvtJTz5CJC25zhhyocPV9guM%3D
+[200] https://auth.uber.com/login/?next_url=https%3A%2F%2Fm.uber.com%2F&privileged_op_url=https%3A%2F%2Fm.uber.com%2F
+[200] https://auth.uber.com/login/session
+[200] https://auth.uber.com/login/social/?next_url=https%3A%2F%2Fm.uber.com%2F&privileged_op_url=https%3A%2F%2Fm.uber.com%2F&uber_client_name=m2
 -----
-Signature: 298926734 ; URLs: 2
- - Content-Length
- - Accept-Ranges
- - Access-Control-Allow-Headers
- - Access-Control-Allow-Methods
- - Access-Control-Allow-Origin
- - Access-Control-Expose-Headers
- - Access-Control-Max-Age
+Signature: 148156071 ; URLs: 2
+ - Alt-Svc
  - Cache-Control
+ - Content-Security-Policy
  - Content-Type
  - Date
  - Etag
- - Expires
- - Last-Modified
  - Server
+ - Set-Cookie
+ - Set-Cookie
+ - Strict-Transport-Security
  - Vary
+ - Via
+ - X-Content-Security-Policy
+ - X-Content-Type-Options
+ - X-Csrf-Token
+ - X-Envoy-Upstream-Service-Time
+ - X-Frame-Options
+ - X-Uber-Edge
+ - X-Webkit-Csp
+ - X-Xss-Protection
 -----
 Urls:
 -----
-[200] https://a.bildstatic.de/breakingnews/index.json
-[200] https://a.bildstatic.de/img/club-bremen.d75c8c1.svg
+[404] https://auth.uber.com/login/social
+[404] https://auth.uber.com/login/social/
 -----
+Signature: 264694073 ; URLs: 1
+ - Alt-Svc
+ - Cache-Control
+ - Content-Type
+ - Date
+ - Server
+ - Strict-Transport-Security
+ - Vary
+ - Via
+ - X-Content-Type-Options
+ - X-Envoy-Upstream-Service-Time
+ - X-Frame-Options
+ - X-Uber-Edge
+ - X-Xss-Protection
+-----
+Urls:
+-----
+[404] https://auth.uber.com/
+-----
+```
+
+# Similar or related projects
+
+* https://github.com/rverton/wonitor
+* https://github.com/dgtlmoon/changedetection.io
