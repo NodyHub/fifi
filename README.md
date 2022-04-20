@@ -14,11 +14,11 @@ This tool provides help to identify differences in the response headers from a g
 go install github.com/NodyHub/fifi@latest
 ```
 
-## Usage
+## Usage and example output
 
 ```shell
-% fifi -h
-usage: fifi [files]
+[~/git/fifi]% fifi -h
+2022/04/20 10:22:32 usage: fifi [files]
 Parse urls and fetch Server banners.
 
 Options:
@@ -33,6 +33,8 @@ Options:
   -c string
     	Cookie
   -j	Result as json
+  -r int
+    	Maximum retries for request (default 3)
   -t int
     	Timeout seconds (default 1)
   -u string
@@ -40,37 +42,50 @@ Options:
   -v	Verbose output
   -w int
     	Wait ms between requests
-```
-
-## Example output
-
-This example gives an indication about the hosting infrastructure from Snapchat
-
-```shell
-% cat bild.urls | fifi -v
-2022/04/14 18:02:41 reading from stdin...
-2022/04/14 18:02:41 Collected 19 different urls, starting analysis
-2022/04/14 18:02:41 1749586943 https://a.bildstatic.de/img/bild-spielt.93c47b6.svg
-2022/04/14 18:02:41 298926734 https://a.bildstatic.de/img/club-bremen.d75c8c1.svg
-2022/04/14 18:02:41 1749586943 https://a.bildstatic.de/img/bild-gutscheine.360142b.svg
-2022/04/14 18:02:41 1749586943 https://a.bildstatic.de/img/bild-vpn.51b780c.svg
-2022/04/14 18:02:41 1749586943 https://a.bildstatic.de/img/club-aue.20b5c70.svg
-2022/04/14 18:02:41 1749586943 https://a.bildstatic.de/img/club-augsburg.19aa74e.svg
-2022/04/14 18:02:41 1749586943 https://a.bildstatic.de/img/club-dortmund.1940fa3.svg
-2022/04/14 18:02:41 1749586943 https://a.bildstatic.de/img/club-dresden.caa901d.svg
-2022/04/14 18:02:41 298926734 https://a.bildstatic.de/breakingnews/index.json
-2022/04/14 18:02:42 3080683410 https://a.bildstatic.de/breakingnews
-2022/04/14 18:02:42 3080683410 https://a.bildstatic.de/img
-2022/04/14 18:02:42 1749586943 https://a.bildstatic.de/img/bild-deals.5e10a5e.svg
-2022/04/14 18:02:42 1749586943 https://a.bildstatic.de/img/bild-vergleich.b0589b9.svg
-2022/04/14 18:02:42 1749586943 https://a.bildstatic.de/img/club-darmstadt.bfca4d7.svg
-2022/04/14 18:02:42 1749586943 https://a.bildstatic.de/img/club-duesseldorf.7210a4c.svg
-2022/04/14 18:02:42 3080683410 https://a.bildstatic.de/
-2022/04/14 18:02:42 1749586943 https://a.bildstatic.de/img/club-bielefeld.9bd0726.svg
-2022/04/14 18:02:42 1749586943 https://a.bildstatic.de/img/club-bochum.0bba830.svg
-2022/04/14 18:02:42 1749586943 https://a.bildstatic.de/img/bild-jobs.d0f1b16.svg
+[~/git/fifi]% cat bild.urls | fifi -v
+2022/04/20 10:22:34 reading from stdin...
+2022/04/20 10:22:34 Collected 19 different urls, starting analysis
+2022/04/20 10:22:35 3080683410 https://a.bildstatic.de/
+2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/club-bielefeld.9bd0726.svg
+2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/club-duesseldorf.7210a4c.svg
+2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/bild-deals.5e10a5e.svg
+2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/bild-jobs.d0f1b16.svg
+2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/bild-vergleich.b0589b9.svg
+2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/club-aue.20b5c70.svg
+2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/club-augsburg.19aa74e.svg
+2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/club-dortmund.1940fa3.svg
+2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/club-dresden.caa901d.svg
+2022/04/20 10:22:35 3080683410 https://a.bildstatic.de/breakingnews
+2022/04/20 10:22:35 298926734 https://a.bildstatic.de/breakingnews/index.json
+2022/04/20 10:22:35 3080683410 https://a.bildstatic.de/img
+2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/bild-spielt.93c47b6.svg
+2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/bild-vpn.51b780c.svg
+2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/bild-gutscheine.360142b.svg
+2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/club-bochum.0bba830.svg
+2022/04/20 10:22:35 298926734 https://a.bildstatic.de/img/club-bremen.d75c8c1.svg
+2022/04/20 10:22:35 1749586943 https://a.bildstatic.de/img/club-darmstadt.bfca4d7.svg
 
 Summary:
+Signature: 3080683410 ; URLs: 3
+ - Content-Length
+ - Accept-Ranges
+ - Access-Control-Allow-Headers
+ - Access-Control-Allow-Methods
+ - Access-Control-Allow-Origin
+ - Access-Control-Expose-Headers
+ - Access-Control-Max-Age
+ - Cache-Control
+ - Date
+ - Expires
+ - Server
+ - Vary
+-----
+Urls:
+-----
+[404] https://a.bildstatic.de/
+[404] https://a.bildstatic.de/breakingnews
+[404] https://a.bildstatic.de/img
+-----
 Signature: 1749586943 ; URLs: 14
  - Accept-Ranges
  - Access-Control-Allow-Headers
@@ -126,24 +141,3 @@ Urls:
 [200] https://a.bildstatic.de/breakingnews/index.json
 [200] https://a.bildstatic.de/img/club-bremen.d75c8c1.svg
 -----
-Signature: 3080683410 ; URLs: 3
- - Content-Length
- - Accept-Ranges
- - Access-Control-Allow-Headers
- - Access-Control-Allow-Methods
- - Access-Control-Allow-Origin
- - Access-Control-Expose-Headers
- - Access-Control-Max-Age
- - Cache-Control
- - Date
- - Expires
- - Server
- - Vary
------
-Urls:
------
-[404] https://a.bildstatic.de/
-[404] https://a.bildstatic.de/breakingnews
-[404] https://a.bildstatic.de/img
------
-```
