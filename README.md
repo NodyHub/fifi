@@ -9,7 +9,7 @@ Recently, spring boot had a wide spreaded RCE vulnerability, known as [Spring4Sh
 This tool provides help to identify differences in the response headers from a given list of urls.
 
 ## Installation
-
+Ether download it from [the release page](https://github.com/NodyHub/fifi/releases) or complie it by yourself:
 ```
 go install github.com/NodyHub/fifi@v0.1.0
 ```
