@@ -11,7 +11,7 @@ This tool provides help to identify differences in the response headers from a g
 ## Installation
 
 ```
-go install github.com/NodyHub/fifi@latest
+go install github.com/NodyHub/fifi@v0.1.0
 ```
 
 ## Usage and example output
