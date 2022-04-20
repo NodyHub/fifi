@@ -122,7 +122,7 @@ func readFromStdin() ([]string, error) {
 	return urls, nil
 }
 
-func getSignature(crash, verbose bool, timeout, wait int, authorization, cookie, host, method, useragent string, urls map[string]struct{}) (map[string][]urlResponse, error) {
+func getSignature(crash, verbose bool, maxRetry, timeout, wait int, authorization, cookie, host, method, useragent string, urls map[string]struct{}) (map[string][]urlResponse, error) {
 	// headerMap := make(map[string][]string)
 	result := make(map[string][]urlResponse)
 
@@ -159,13 +159,24 @@ func getSignature(crash, verbose bool, timeout, wait int, authorization, cookie,
 
 		// Perform get request
 		resp, err := client.Do(req)
-		if err != nil {
-			if crash {
-				return nil, err
+		// first at all, check for crash
+		if err != nil && crash {
+			return nil, err
+		}
+		//  the other error handling
+		retry := 0
+		for retry < maxRetry && err != nil {
+			log.Printf("ERROR (%v): %s\n", retry, err.Error())
+			if os.IsTimeout(err) || resp.StatusCode == 429 {
+				time.Sleep(time.Second * time.Duration(retry+1))
 			} else {
-				log.Printf("ERROR: %s\n", err.Error())
-				continue
+				retry = maxRetry
 			}
+			retry++
+		}
+		if retry == maxRetry {
+			log.Printf("maxRetry(%v) reached, go to next url\n", maxRetry)
+			continue
 		}
 
 		// Handle response and evaluate
@@ -211,6 +222,7 @@ func main() {
 	method := flag.String("X", "GET", "Method")
 	host := flag.String("H", "", "Host")
 	jsonOutput := flag.Bool("j", false, "Result as json")
+	maxRetry := flag.Int("r", 3, "Maximum retries for request")
 	timeout := flag.Int("t", 1, "Timeout seconds")
 	useragent := flag.String("u", "", "User-Agent (default GoLang default)")
 	verbose := flag.Bool("v", false, "Verbose output")
@@ -249,7 +261,7 @@ func main() {
 	}
 
 	log.Printf("Collected %v different urls, starting analysis\n", len(unifiedUrls))
-	res, err := getSignature(*crash, *verbose, *timeout, *wait, *authorization, *cookie, *host, *method, *useragent, unifiedUrls)
+	res, err := getSignature(*crash, *verbose, *maxRetry, *timeout, *wait, *authorization, *cookie, *host, *method, *useragent, unifiedUrls)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("ERROR! %s", err.Error()))
 	}
