@@ -1,6 +1,6 @@
 # Fifi
 
-Fifi collects server response header (or the [`Server`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Server) banner) from a given list of urls and groups them.
+Fifi collects server response header from a given list of urls and groups them.
 
 ## Background
 
