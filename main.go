@@ -203,6 +203,38 @@ func getSignature(crash, verbose bool, maxRetry, timeout, wait int, authorizatio
 	return result, nil
 }
 
+func getSimilarHeaders(collectedResponses map[string][]urlResponse) map[string]bool {
+	// Collect all headers for all responses
+	headerMap := make(map[string]bool)
+	for _, responses := range collectedResponses {
+		resp := responses[0]
+		for _, header := range resp.HeaderEntries {
+			headerMap[header.Key] = true
+		}
+	}
+
+	// iterate over found headers and check if they are existend in every response
+	for header := range headerMap {
+		found := 0
+		for _, responses := range collectedResponses {
+			resp := responses[0]
+			for _, entry := range resp.HeaderEntries {
+				if header == entry.Key {
+					found++
+					break
+				}
+			}
+		}
+
+		// Delete header if not found in every response
+		if found < len(collectedResponses) {
+			delete(headerMap, header)
+		}
+	}
+
+	return headerMap
+}
+
 const (
 	usage = `usage: %s [files]
 Parse urls and fetch Server banners.
@@ -266,6 +298,9 @@ func main() {
 		log.Fatal(fmt.Sprintf("ERROR! %s", err.Error()))
 	}
 
+	// Get all heads that are in  every response existend
+	similarHeaders := getSimilarHeaders(res)
+
 	// Output result
 	if *jsonOutput {
 		b, err := json.MarshalIndent(res, "", "  ")
@@ -275,18 +310,33 @@ func main() {
 		fmt.Printf(string(b))
 	} else {
 		fmt.Println("\nSummary:")
+		// Iterate over headers that are existent in every request
+		if *verbose {
+			fmt.Println("===================================")
+			fmt.Println("Headers received in every response:")
+			fmt.Println("===================================")
+			for header := range similarHeaders {
+				fmt.Printf(" - %s\n", header)
+			}
+			fmt.Println("===================================")
+		}
+
 		// Iterate over all Signatures
+		fmt.Println("")
 		for sig, responses := range res {
+			fmt.Println("-----------------------------------")
 			fmt.Printf("Signature: %s ; URLs: %v\n", sig, len(responses))
 
 			if *verbose {
 				// Iterate over response header
+				fmt.Println("Additional headers:")
 				for _, h := range responses[0].HeaderEntries {
-					fmt.Printf(" - %s\n", h.Key)
+					if found := similarHeaders[h.Key]; !found {
+						fmt.Printf(" - %s\n", h.Key)
+					}
 				}
-				fmt.Println("-----")
+				fmt.Println("")
 				fmt.Println("Urls: ")
-				fmt.Println("-----")
 
 				// Iterate over sorted list of urls
 				urls := make([]string, len(responses))
@@ -297,7 +347,7 @@ func main() {
 				for _, u := range urls {
 					fmt.Println(u)
 				}
-				fmt.Println("-----")
+				fmt.Println("-----------------------------------\n")
 			}
 		}
 	}
