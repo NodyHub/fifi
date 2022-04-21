@@ -5,7 +5,7 @@ on:
     types: [ published ]
 
 jobs:
-  gocap:
+  fifi:
     name: fifi
     runs-on: ubuntu-latest
     steps:
