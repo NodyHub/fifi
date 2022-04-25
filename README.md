@@ -1,6 +1,8 @@
-# Fifi
+# fifi
 
-Fifi collects server response header from a given list of urls and groups them.
+fifi sends to a given list of url's HTTP requests, calculates on each response a signature and groups them based on the values.
+
+Responses with the same signature may indicate similar implementation pattern, technologies and homogenious data processing. 
 
 ## Background
 
