@@ -12,6 +12,7 @@ import (
 	"net/http/httputil"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -36,14 +37,30 @@ func hash(s string) string {
 	return fmt.Sprint(h.Sum32())
 }
 
-func getResponseSignature(url urlResponse) string {
-	raw := "(none)"
-	for i, h := range url.HeaderEntries {
-		if i == 0 {
-			raw = h.Key
-		} else {
-			raw = fmt.Sprintf("%s;%s", raw, h.Key)
+func getResponseSignature(responseCode, serverHeader bool, url urlResponse) string {
+	var raw string = ""
+	// Add Response code to signature
+	if responseCode {
+		raw = strconv.Itoa(url.StatusCode)
+	}
+	// Add server header value to signature
+	if serverHeader {
+		var srvHdrId = -1
+		for i, h := range url.HeaderEntries {
+			if strings.EqualFold("server", h.Key) {
+				srvHdrId = i
+				break
+			}
 		}
+		if srvHdrId > -1 {
+			raw = fmt.Sprintf("%s;%s", raw, url.HeaderEntries[srvHdrId].Value)
+		} else {
+			raw = fmt.Sprintf("%s;%s", raw, "(none)")
+		}
+	}
+	// Concat all response header key's
+	for _, h := range url.HeaderEntries {
+		raw = fmt.Sprintf("%s;%s", raw, h.Key)
 	}
 
 	return hash(raw)
@@ -60,12 +77,14 @@ func getHeaders(response *http.Response) ([]headerEntry, error) {
 	}
 	for _, row := range strings.Split(string(rawResponse), "\n") {
 		if len(row) > 0 {
+			// extract and preserver the original header value
 			field := strings.TrimSpace(strings.Split(row, ":")[0])
 			for h, v := range response.Header {
+				// Compare with http lib extracted headers and store
 				if strings.EqualFold(field, h) {
-					idx := hdrCounter[h]
-					res = append(res, headerEntry{h, v[idx]})
-					hdrCounter[h] = idx + 1
+					idx := hdrCounter[field]
+					res = append(res, headerEntry{field, v[idx]})
+					hdrCounter[field] = idx + 1
 				}
 			}
 		}
@@ -122,7 +141,7 @@ func readFromStdin() ([]string, error) {
 	return urls, nil
 }
 
-func getSignature(crash, verbose bool, maxRetry, timeout, wait int, authorization, cookie, host, method, useragent string, urls map[string]struct{}) (map[string][]urlResponse, error) {
+func getSignature(crash, responseCode, serverHeader, verbose bool, maxRetry, timeout, wait int, authorization, cookie, host, method, useragent string, urls map[string]struct{}) (map[string][]urlResponse, error) {
 	// headerMap := make(map[string][]string)
 	result := make(map[string][]urlResponse)
 
@@ -186,7 +205,7 @@ func getSignature(crash, verbose bool, maxRetry, timeout, wait int, authorizatio
 		}
 
 		parsedResponse := urlResponse{url, headers, resp.StatusCode, resp.Status}
-		sig := getResponseSignature(parsedResponse)
+		sig := getResponseSignature(responseCode, serverHeader, parsedResponse)
 		if _, exist := result[sig]; exist {
 			result[sig] = append(result[sig], parsedResponse)
 		} else {
@@ -254,7 +273,9 @@ func main() {
 	method := flag.String("X", "GET", "Method")
 	host := flag.String("H", "", "Host")
 	jsonOutput := flag.Bool("j", false, "Result as json")
-	maxRetry := flag.Int("r", 3, "Maximum retries for request")
+	maxRetry := flag.Int("m", 3, "Maximum retries for request")
+	responseCode := flag.Bool("r", false, "Include HTTP response code in signature calculation")
+	serverHeader := flag.Bool("s", false, "Include 'Server' response header in signature calculation")
 	timeout := flag.Int("t", 1, "Timeout seconds")
 	useragent := flag.String("u", "", "User-Agent (default GoLang default)")
 	verbose := flag.Bool("v", false, "Verbose output")
@@ -293,7 +314,7 @@ func main() {
 	}
 
 	log.Printf("Collected %v different urls, starting analysis\n", len(unifiedUrls))
-	res, err := getSignature(*crash, *verbose, *maxRetry, *timeout, *wait, *authorization, *cookie, *host, *method, *useragent, unifiedUrls)
+	res, err := getSignature(*crash, *responseCode, *serverHeader, *verbose, *maxRetry, *timeout, *wait, *authorization, *cookie, *host, *method, *useragent, unifiedUrls)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("ERROR! %s", err.Error()))
 	}
@@ -331,7 +352,9 @@ func main() {
 				// Iterate over response header
 				fmt.Println("Additional headers:")
 				for _, h := range responses[0].HeaderEntries {
-					if found := similarHeaders[h.Key]; !found {
+					if *serverHeader && strings.EqualFold(h.Key, "server") {
+						fmt.Printf(" - %s: %s\n", h.Key, h.Value)
+					} else if found := similarHeaders[h.Key]; !found {
 						fmt.Printf(" - %s\n", h.Key)
 					}
 				}
