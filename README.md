@@ -20,7 +20,7 @@ go install github.com/NodyHub/fifi@v0.1.0
 
 ```shell
 [~/git/fifi]% fifi -h
-2022/04/20 11:42:14 usage: fifi [files]
+2022/04/26 10:15:36 usage: fifi [files]
 Parse urls and fetch Server banners.
 
 Options:
@@ -35,8 +35,10 @@ Options:
   -c string
     	Cookie
   -j	Result as json
-  -r int
+  -m int
     	Maximum retries for request (default 3)
+  -r	Include HTTP response code in signature calculation
+  -s	Include 'Server' response header in signature calculation
   -t int
     	Timeout seconds (default 1)
   -u string
@@ -45,41 +47,41 @@ Options:
   -w int
     	Wait ms between requests
 [~/git/fifi]% cat uber.url.lst | fifi -v
-2022/04/20 11:42:46 reading from stdin...
-2022/04/20 11:42:46 Collected 11 different urls, starting analysis
-2022/04/20 11:42:46 148156071 https://auth.uber.com/login/social/
-2022/04/20 11:42:46 1128600947 https://auth.uber.com/login/social/?next_url=https%3A%2F%2Fm.uber.com%2F&privileged_op_url=https%3A%2F%2Fm.uber.com%2F&uber_client_name=m2
-2022/04/20 11:42:47 264694073 https://auth.uber.com/
-2022/04/20 11:42:47 1128600947 https://auth.uber.com/login/
-2022/04/20 11:42:47 1128600947 https://auth.uber.com/login/?breeze_local_zone=dca11&next_url=https%3A%2F%2Fm.uber.com%2F&state=NUUybaiHU9SIaKz56QjyvtJTz5CJC25zhhyocPV9guM%3D
-2022/04/20 11:42:47 1128600947 https://auth.uber.com/login/session
-2022/04/20 11:42:47 148156071 https://auth.uber.com/login/social
-2022/04/20 11:42:47 1128600947 https://auth.uber.com/login/social/?from=facebook&state=%7B%22query%22%3A%22%3Fnext_url%3Dhttps%253A%252F%252Fm.uber.com%252F%26privileged_op_url%3Dhttps%253A%252F%252Fm.uber.com%252F%26uber_client_name%3Dm2%22%2C%22csrfToken%22%3A%221650443852-01-FNOsAwdU4I8HWkiFZuimbrTHjauX146ik_Hq9h7k1Ew%22%2C%22app%22%3A%22%22%7D&response_type=token
-2022/04/20 11:42:48 1128600947 https://auth.uber.com/login
-2022/04/20 11:42:48 1128600947 https://auth.uber.com/login/?breeze_local_zone=dca1&state=0A-OdN1vuv_FDbpofRZqJg9maKASCY4k0kCRVEiSDGw%3D&uber_client_name=riderSignUp&uclick_id=840a8ddd-ac10-47e6-aec4-e492968acc42
-2022/04/20 11:42:48 1128600947 https://auth.uber.com/login/?next_url=https%3A%2F%2Fm.uber.com%2F&privileged_op_url=https%3A%2F%2Fm.uber.com%2F
+2022/04/26 10:16:09 reading from stdin...
+2022/04/26 10:16:09 Collected 11 different urls, starting analysis
+2022/04/26 10:16:09 3022560216 https://auth.uber.com/login/social
+2022/04/26 10:16:10 1149410124 https://auth.uber.com/login/social/?next_url=https%3A%2F%2Fm.uber.com%2F&privileged_op_url=https%3A%2F%2Fm.uber.com%2F&uber_client_name=m2
+2022/04/26 10:16:10 232310904 https://auth.uber.com/
+2022/04/26 10:16:10 1149410124 https://auth.uber.com/login/?breeze_local_zone=dca1&state=0A-OdN1vuv_FDbpofRZqJg9maKASCY4k0kCRVEiSDGw%3D&uber_client_name=riderSignUp&uclick_id=840a8ddd-ac10-47e6-aec4-e492968acc42
+2022/04/26 10:16:10 1149410124 https://auth.uber.com/login/?breeze_local_zone=dca11&next_url=https%3A%2F%2Fm.uber.com%2F&state=NUUybaiHU9SIaKz56QjyvtJTz5CJC25zhhyocPV9guM%3D
+2022/04/26 10:16:10 1149410124 https://auth.uber.com/login/?next_url=https%3A%2F%2Fm.uber.com%2F&privileged_op_url=https%3A%2F%2Fm.uber.com%2F
+2022/04/26 10:16:10 1149410124 https://auth.uber.com/login/session
+2022/04/26 10:16:10 3022560216 https://auth.uber.com/login/social/
+2022/04/26 10:16:11 1149410124 https://auth.uber.com/login/social/?from=facebook&state=%7B%22query%22%3A%22%3Fnext_url%3Dhttps%253A%252F%252Fm.uber.com%252F%26privileged_op_url%3Dhttps%253A%252F%252Fm.uber.com%252F%26uber_client_name%3Dm2%22%2C%22csrfToken%22%3A%221650443852-01-FNOsAwdU4I8HWkiFZuimbrTHjauX146ik_Hq9h7k1Ew%22%2C%22app%22%3A%22%22%7D&response_type=token
+2022/04/26 10:16:11 1149410124 https://auth.uber.com/login
+2022/04/26 10:16:11 1149410124 https://auth.uber.com/login/
 
 Summary:
 ===================================
 Headers received in every response:
 ===================================
- - Content-Type
- - Via
- - Alt-Svc
- - Date
- - Server
- - Vary
  - X-Frame-Options
- - X-Uber-Edge
- - X-Xss-Protection
  - Cache-Control
  - Strict-Transport-Security
- - X-Content-Type-Options
  - X-Envoy-Upstream-Service-Time
+ - Alt-Svc
+ - Date
+ - Via
+ - X-Content-Type-Options
+ - X-Xss-Protection
+ - Content-Type
+ - Server
+ - Vary
+ - X-Uber-Edge
 ===================================
 
 -----------------------------------
-Signature: 148156071 ; URLs: 2
+Signature: 3022560216 ; URLs: 2
 Additional headers:
  - Content-Security-Policy
  - Etag
@@ -95,7 +97,7 @@ Urls:
 -----------------------------------
 
 -----------------------------------
-Signature: 1128600947 ; URLs: 8
+Signature: 1149410124 ; URLs: 8
 Additional headers:
  - Content-Security-Policy
  - Etag
@@ -118,7 +120,7 @@ Urls:
 -----------------------------------
 
 -----------------------------------
-Signature: 264694073 ; URLs: 1
+Signature: 232310904 ; URLs: 1
 Additional headers:
 
 Urls:
