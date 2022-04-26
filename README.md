@@ -128,6 +128,21 @@ Urls:
 -----------------------------------
 ```
 
+# Application behaviour
+
+```mermaid
+graph TD
+    A[User] -->|all url's| B(fifi)
+    B --> C{For all url's}
+    C --> D[Send HTTP request]
+    D --> E[Calculate signature]
+    E --> F[Store response, based on signature]
+    F --> C
+    C --> G[Generate output]
+
+```
+
+
 # Similar or related projects
 
 * https://github.com/rverton/wonitor
