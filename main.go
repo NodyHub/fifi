@@ -319,7 +319,7 @@ func main() {
 		log.Fatal(fmt.Sprintf("ERROR! %s", err.Error()))
 	}
 
-	// Get all heads that are in  every response existend
+	// Get all headers that are in every response
 	similarHeaders := getSimilarHeaders(res)
 
 	// Output result
@@ -344,7 +344,13 @@ func main() {
 
 		// Iterate over all Signatures
 		fmt.Println("")
-		for sig, responses := range res {
+		signatures := []string{}
+		for sig := range res {
+			signatures = append(signatures, sig)
+		}
+		sort.Strings(signatures)
+		for _, sig := range signatures {
+			responses := res[sig]
 			fmt.Println("-----------------------------------")
 			fmt.Printf("Signature: %s ; URLs: %v\n", sig, len(responses))
 
