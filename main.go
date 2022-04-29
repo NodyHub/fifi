@@ -29,6 +29,22 @@ type urlResponse struct {
 	Status        string
 }
 
+type cliParameter struct {
+	Authorization string
+	Cookie        string
+	Crash         bool
+	Method        string
+	Host          string
+	JsonOutput    bool
+	MaxRetry      int
+	ResponseCode  bool
+	ServerHeader  bool
+	Timeout       int
+	Useragent     string
+	Verbose       bool
+	Wait          int
+}
+
 // hash calulates the hash value of a given string
 func hash(s string) string {
 	h := fnv.New32a()
@@ -37,14 +53,14 @@ func hash(s string) string {
 	return fmt.Sprint(h.Sum32())
 }
 
-func getResponseSignature(responseCode, serverHeader bool, url urlResponse) string {
+func getResponseSignature(parsedArgs cliParameter, url urlResponse) string {
 	var raw string = ""
 	// Add Response code to signature
-	if responseCode {
+	if parsedArgs.ResponseCode {
 		raw = strconv.Itoa(url.StatusCode)
 	}
 	// Add server header value to signature
-	if serverHeader {
+	if parsedArgs.ServerHeader {
 		var srvHdrId = -1
 		for i, h := range url.HeaderEntries {
 			if strings.EqualFold("server", h.Key) {
@@ -141,60 +157,60 @@ func readFromStdin() ([]string, error) {
 	return urls, nil
 }
 
-func getSignature(crash, responseCode, serverHeader, verbose bool, maxRetry, timeout, wait int, authorization, cookie, host, method, useragent string, urls map[string]struct{}) (map[string][]urlResponse, error) {
+func getSignature(parsedArgs cliParameter, urls map[string]struct{}) (map[string][]urlResponse, error) {
 	// headerMap := make(map[string][]string)
 	result := make(map[string][]urlResponse)
 
 	client := http.Client{
-		Timeout: time.Duration(timeout) * time.Second,
+		Timeout: time.Duration(parsedArgs.Timeout) * time.Second,
 	}
 
 	for url := range urls {
 		// Declare HTTP Method and Url
-		req, err := http.NewRequest(method, url, nil)
+		req, err := http.NewRequest(parsedArgs.Method, url, nil)
 		if err != nil {
 			return nil, err
 		}
 
 		// Set Auth
-		if len(authorization) > 0 {
-			req.Header.Add("Authorization", authorization)
+		if len(parsedArgs.Authorization) > 0 {
+			req.Header.Add("Authorization", parsedArgs.Authorization)
 		}
 
 		// Set Cookie
-		if len(cookie) > 0 {
-			req.Header.Add("Cookie", cookie)
+		if len(parsedArgs.Cookie) > 0 {
+			req.Header.Add("Cookie", parsedArgs.Cookie)
 		}
 
 		// Set Host
-		if len(host) > 0 {
-			req.Host = host
+		if len(parsedArgs.Host) > 0 {
+			req.Host = parsedArgs.Host
 		}
 
 		// Set UserAgent
-		if len(useragent) > 0 {
-			req.Header.Add("User-Agent", useragent)
+		if len(parsedArgs.Useragent) > 0 {
+			req.Header.Add("User-Agent", parsedArgs.Useragent)
 		}
 
 		// Perform get request
 		resp, err := client.Do(req)
 		// first at all, check for crash
-		if err != nil && crash {
+		if err != nil && parsedArgs.Crash {
 			return nil, err
 		}
 		//  the other error handling
 		retry := 0
-		for retry < maxRetry && err != nil {
+		for retry < parsedArgs.MaxRetry && err != nil {
 			log.Printf("ERROR (%v): %s\n", retry, err.Error())
 			if os.IsTimeout(err) || resp.StatusCode == 429 {
 				time.Sleep(time.Second * time.Duration(retry+1))
 			} else {
-				retry = maxRetry
+				retry = parsedArgs.MaxRetry
 			}
 			retry++
 		}
-		if retry == maxRetry {
-			log.Printf("maxRetry(%v) reached, go to next url\n", maxRetry)
+		if retry == parsedArgs.MaxRetry {
+			log.Printf("maxRetry(%v) reached, go to next url\n", parsedArgs.MaxRetry)
 			continue
 		}
 
@@ -205,18 +221,18 @@ func getSignature(crash, responseCode, serverHeader, verbose bool, maxRetry, tim
 		}
 
 		parsedResponse := urlResponse{url, headers, resp.StatusCode, resp.Status}
-		sig := getResponseSignature(responseCode, serverHeader, parsedResponse)
+		sig := getResponseSignature(parsedArgs, parsedResponse)
 		if _, exist := result[sig]; exist {
 			result[sig] = append(result[sig], parsedResponse)
 		} else {
 			result[sig] = []urlResponse{parsedResponse}
 		}
 
-		if verbose {
+		if parsedArgs.Verbose {
 			log.Printf("%s %s\n", sig, url)
 		}
 
-		time.Sleep(time.Duration(wait) * time.Millisecond)
+		time.Sleep(time.Duration(parsedArgs.Wait) * time.Millisecond)
 	}
 
 	return result, nil
@@ -287,6 +303,21 @@ func main() {
 	flag.Parse()
 	input := flag.Args()
 
+	parsedArgs := cliParameter{
+		*authorization,
+		*cookie,
+		*crash,
+		*method,
+		*host,
+		*jsonOutput,
+		*maxRetry,
+		*responseCode,
+		*serverHeader,
+		*timeout,
+		*useragent,
+		*verbose,
+		*wait}
+
 	// Get URLS
 	var err error
 	var urls []string
@@ -314,7 +345,7 @@ func main() {
 	}
 
 	log.Printf("Collected %v different urls, starting analysis\n", len(unifiedUrls))
-	res, err := getSignature(*crash, *responseCode, *serverHeader, *verbose, *maxRetry, *timeout, *wait, *authorization, *cookie, *host, *method, *useragent, unifiedUrls)
+	res, err := getSignature(parsedArgs, unifiedUrls)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("ERROR! %s", err.Error()))
 	}
