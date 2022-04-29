@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -30,19 +31,20 @@ type urlResponse struct {
 }
 
 type cliParameter struct {
-	Authorization string
-	Cookie        string
-	Crash         bool
-	Method        string
-	Host          string
-	JsonOutput    bool
-	MaxRetry      int
-	ResponseCode  bool
-	ServerHeader  bool
-	Timeout       int
-	Useragent     string
-	Verbose       bool
-	Wait          int
+	Authorization    string
+	Cookie           string
+	Crash            bool
+	Method           string
+	Host             string
+	JsonOutput       bool
+	MaxRetry         int
+	ParallelRequests bool
+	ResponseCode     bool
+	ServerHeader     bool
+	Timeout          int
+	Useragent        string
+	Verbose          bool
+	Wait             int
 }
 
 // hash calulates the hash value of a given string
@@ -53,7 +55,7 @@ func hash(s string) string {
 	return fmt.Sprint(h.Sum32())
 }
 
-func getResponseSignature(parsedArgs cliParameter, url urlResponse) string {
+func getResponseSignature(parsedArgs *cliParameter, url *urlResponse) string {
 	var raw string = ""
 	// Add Response code to signature
 	if parsedArgs.ResponseCode {
@@ -157,82 +159,137 @@ func readFromStdin() ([]string, error) {
 	return urls, nil
 }
 
-func getSignature(parsedArgs cliParameter, urls map[string]struct{}) (map[string][]urlResponse, error) {
-	// headerMap := make(map[string][]string)
-	result := make(map[string][]urlResponse)
-
+func performRequest(parsedArgs *cliParameter, url string) (*http.Response, error) {
 	client := http.Client{
 		Timeout: time.Duration(parsedArgs.Timeout) * time.Second,
 	}
 
-	for url := range urls {
-		// Declare HTTP Method and Url
-		req, err := http.NewRequest(parsedArgs.Method, url, nil)
-		if err != nil {
-			return nil, err
-		}
+	// Declare HTTP Method and Url
+	req, err := http.NewRequest(parsedArgs.Method, url, nil)
+	if err != nil {
+		return nil, err
+	}
 
-		// Set Auth
-		if len(parsedArgs.Authorization) > 0 {
-			req.Header.Add("Authorization", parsedArgs.Authorization)
-		}
+	// Set Auth
+	if len(parsedArgs.Authorization) > 0 {
+		req.Header.Add("Authorization", parsedArgs.Authorization)
+	}
 
-		// Set Cookie
-		if len(parsedArgs.Cookie) > 0 {
-			req.Header.Add("Cookie", parsedArgs.Cookie)
-		}
+	// Set Cookie
+	if len(parsedArgs.Cookie) > 0 {
+		req.Header.Add("Cookie", parsedArgs.Cookie)
+	}
 
-		// Set Host
-		if len(parsedArgs.Host) > 0 {
-			req.Host = parsedArgs.Host
-		}
+	// Set Host
+	if len(parsedArgs.Host) > 0 {
+		req.Host = parsedArgs.Host
+	}
 
-		// Set UserAgent
-		if len(parsedArgs.Useragent) > 0 {
-			req.Header.Add("User-Agent", parsedArgs.Useragent)
-		}
+	// Set UserAgent
+	if len(parsedArgs.Useragent) > 0 {
+		req.Header.Add("User-Agent", parsedArgs.Useragent)
+	}
+	// Perform get request
+	resp, err := client.Do(req)
 
-		// Perform get request
-		resp, err := client.Do(req)
-		// first at all, check for crash
-		if err != nil && parsedArgs.Crash {
-			return nil, err
-		}
-		//  the other error handling
-		retry := 0
-		for retry < parsedArgs.MaxRetry && err != nil {
-			log.Printf("ERROR (%v): %s\n", retry, err.Error())
-			if os.IsTimeout(err) || resp.StatusCode == 429 {
-				time.Sleep(time.Second * time.Duration(retry+1))
-			} else {
-				retry = parsedArgs.MaxRetry
-			}
-			retry++
-		}
-		if retry == parsedArgs.MaxRetry {
-			log.Printf("maxRetry(%v) reached, go to next url\n", parsedArgs.MaxRetry)
-			continue
-		}
-
-		// Handle response and evaluate
-		headers, err := getHeaders(resp)
-		if err != nil {
-			return nil, err
-		}
-
-		parsedResponse := urlResponse{url, headers, resp.StatusCode, resp.Status}
-		sig := getResponseSignature(parsedArgs, parsedResponse)
-		if _, exist := result[sig]; exist {
-			result[sig] = append(result[sig], parsedResponse)
+	// first at all, check for crash
+	if err != nil && parsedArgs.Crash {
+		return nil, err
+	}
+	//  the other error handling
+	retry := 0
+	for retry < parsedArgs.MaxRetry && err != nil {
+		log.Printf("ERROR (%v): %s\n", retry, err.Error())
+		if os.IsTimeout(err) || resp.StatusCode == 429 {
+			time.Sleep(time.Second * time.Duration(retry+1))
 		} else {
-			result[sig] = []urlResponse{parsedResponse}
+			retry = parsedArgs.MaxRetry
+		}
+		retry++
+	}
+	if retry == parsedArgs.MaxRetry {
+		return nil, fmt.Errorf("maxRetry(%v) reached, go to next url\n", parsedArgs.MaxRetry)
+	}
+
+	return resp, nil
+}
+
+// storeResult evaluates the response from the http request and stores it
+func storeResult(mtx *sync.RWMutex, parsedArgs *cliParameter, resp *http.Response, result *map[string][]urlResponse, url string) error {
+	headers, err := getHeaders(resp)
+	if err != nil {
+		return err
+	}
+	parsedResponse := urlResponse{url, headers, resp.StatusCode, resp.Status}
+	sig := getResponseSignature(parsedArgs, &parsedResponse)
+
+	if mtx != nil {
+		mtx.RLock()
+	}
+	if _, exist := (*result)[sig]; exist {
+		(*result)[sig] = append((*result)[sig], parsedResponse)
+	} else {
+		(*result)[sig] = []urlResponse{parsedResponse}
+	}
+	if parsedArgs.Verbose {
+		log.Printf("%s %s\n", sig, url)
+	}
+	if mtx != nil {
+		mtx.RUnlock()
+	}
+
+	return nil
+}
+
+func getAllSignatures(parsedArgs *cliParameter, urls *map[string]struct{}) (map[string][]urlResponse, error) {
+	result := make(map[string][]urlResponse)
+	var mtx *sync.RWMutex = nil
+	var wg sync.WaitGroup
+
+	if parsedArgs.ParallelRequests {
+		mtx = new(sync.RWMutex)
+		urlsLen := len(*urls)
+		wg.Add(urlsLen)
+	}
+
+	for url := range *urls {
+
+		// Perform requests in parallel
+		if parsedArgs.ParallelRequests {
+			go func(mtx *sync.RWMutex, parsedArgs *cliParameter, result *map[string][]urlResponse, url string) {
+				defer wg.Done()
+				// Perform get request
+				resp, err := performRequest(parsedArgs, url)
+				if err != nil {
+					log.Printf("ERROR: %s", err)
+					return
+				}
+
+				err = storeResult(mtx, parsedArgs, resp, result, url)
+				if err != nil {
+					log.Printf("ERROR: %s", err)
+					return
+				}
+			}(mtx, parsedArgs, &result, url)
+		} else {
+			// Perform get request sequentiel
+			resp, err := performRequest(parsedArgs, url)
+			if err != nil {
+				log.Printf("ERROR: %s", err)
+				continue
+			}
+
+			err = storeResult(mtx, parsedArgs, resp, &result, url)
+			if err != nil {
+				log.Printf("ERROR: %s", err)
+				continue
+			}
 		}
 
-		if parsedArgs.Verbose {
-			log.Printf("%s %s\n", sig, url)
-		}
+	}
 
-		time.Sleep(time.Duration(parsedArgs.Wait) * time.Millisecond)
+	if parsedArgs.ParallelRequests {
+		wg.Wait()
 	}
 
 	return result, nil
@@ -290,6 +347,7 @@ func main() {
 	host := flag.String("H", "", "Host")
 	jsonOutput := flag.Bool("j", false, "Result as json")
 	maxRetry := flag.Int("m", 3, "Maximum retries for request")
+	parallelRequests := flag.Bool("p", false, "Perform requests in parallel")
 	responseCode := flag.Bool("r", false, "Include HTTP response code in signature calculation")
 	serverHeader := flag.Bool("s", false, "Include 'Server' response header in signature calculation")
 	timeout := flag.Int("t", 1, "Timeout seconds")
@@ -311,6 +369,7 @@ func main() {
 		*host,
 		*jsonOutput,
 		*maxRetry,
+		*parallelRequests,
 		*responseCode,
 		*serverHeader,
 		*timeout,
@@ -345,7 +404,7 @@ func main() {
 	}
 
 	log.Printf("Collected %v different urls, starting analysis\n", len(unifiedUrls))
-	res, err := getSignature(parsedArgs, unifiedUrls)
+	res, err := getAllSignatures(&parsedArgs, &unifiedUrls)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("ERROR! %s", err.Error()))
 	}
