@@ -13,7 +13,7 @@ This tool provides help to identify differences in the response headers from a g
 ## Installation
 Ether download it from [the release page](https://github.com/NodyHub/fifi/releases) or complie it by yourself:
 ```
-go install github.com/NodyHub/fifi@v0.2.0
+go install github.com/NodyHub/fifi@latest
 ```
 
 ## Usage and example output
