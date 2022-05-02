@@ -31,21 +31,23 @@ type urlResponse struct {
 }
 
 type cliParameter struct {
-	Authorization    string
-	Cookie           string
-	Crash            bool
-	Method           string
-	Host             string
-	JsonOutput       bool
-	MaxRetry         int
-	ParallelRequests bool
-	ResponseCode     bool
-	ServerHeader     bool
-	Timeout          int
-	Useragent        string
-	Verbose          bool
-	Wait             int
+	Authorization string
+	Cookie        string
+	Crash         bool
+	Method        string
+	Host          string
+	JsonOutput    bool
+	MaxRetry      int
+	ResponseCode  bool
+	ServerHeader  bool
+	Timeout       int
+	Threads       int
+	Useragent     string
+	Verbose       bool
+	Wait          int
 }
+
+var build = "dev"
 
 // hash calulates the hash value of a given string
 func hash(s string) string {
@@ -160,6 +162,11 @@ func readFromStdin() ([]string, error) {
 }
 
 func performRequest(parsedArgs *cliParameter, url string) (*http.Response, error) {
+
+	if url == "" {
+		return nil, nil
+	}
+
 	client := http.Client{
 		Timeout: time.Duration(parsedArgs.Timeout) * time.Second,
 	}
@@ -216,26 +223,28 @@ func performRequest(parsedArgs *cliParameter, url string) (*http.Response, error
 
 // storeResult evaluates the response from the http request and stores it
 func storeResult(mtx *sync.RWMutex, parsedArgs *cliParameter, resp *http.Response, result *map[string][]urlResponse, url string) error {
-	headers, err := getHeaders(resp)
-	if err != nil {
-		return err
-	}
-	parsedResponse := urlResponse{url, headers, resp.StatusCode, resp.Status}
-	sig := getResponseSignature(parsedArgs, &parsedResponse)
+	if resp != nil {
+		headers, err := getHeaders(resp)
+		if err != nil {
+			return err
+		}
+		parsedResponse := urlResponse{url, headers, resp.StatusCode, resp.Status}
+		sig := getResponseSignature(parsedArgs, &parsedResponse)
 
-	if mtx != nil {
-		mtx.RLock()
-	}
-	if _, exist := (*result)[sig]; exist {
-		(*result)[sig] = append((*result)[sig], parsedResponse)
-	} else {
-		(*result)[sig] = []urlResponse{parsedResponse}
-	}
-	if parsedArgs.Verbose {
-		log.Printf("%s %s\n", sig, url)
-	}
-	if mtx != nil {
-		mtx.RUnlock()
+		if mtx != nil {
+			mtx.RLock()
+		}
+		if _, exist := (*result)[sig]; exist {
+			(*result)[sig] = append((*result)[sig], parsedResponse)
+		} else {
+			(*result)[sig] = []urlResponse{parsedResponse}
+		}
+		if parsedArgs.Verbose {
+			log.Printf("%s %s\n", sig, url)
+		}
+		if mtx != nil {
+			mtx.RUnlock()
+		}
 	}
 
 	return nil
@@ -245,52 +254,58 @@ func getAllSignatures(parsedArgs *cliParameter, urls *map[string]struct{}) (map[
 	result := make(map[string][]urlResponse)
 	var mtx *sync.RWMutex = nil
 	var wg sync.WaitGroup
+	wg.Add(parsedArgs.Threads)
+	sliceSize := len(*urls)
+	urlCnt := 0
 
-	if parsedArgs.ParallelRequests {
+	if parsedArgs.Threads > 1 {
+		sliceSize = int(len(*urls)/parsedArgs.Threads) + 1
 		mtx = new(sync.RWMutex)
-		urlsLen := len(*urls)
-		wg.Add(urlsLen)
+
 	}
+	splitedUrls := make([][]string, parsedArgs.Threads)
 
 	for url := range *urls {
+		thread := int(urlCnt / sliceSize)
+		urlIdx := urlCnt % sliceSize
+		if urlIdx == 0 {
+			// Prepare slice for next thread
+			splitedUrls[thread] = make([]string, sliceSize)
+		}
+		splitedUrls[thread][urlIdx] = url
+		urlCnt++
+	}
 
-		// Perform requests in parallel
-		if parsedArgs.ParallelRequests {
-			go func(mtx *sync.RWMutex, parsedArgs *cliParameter, result *map[string][]urlResponse, url string) {
-				defer wg.Done()
+	// Iterate over number of worker threads
+	log.Printf("parsedArgs.ParallelRequests: %v\n", parsedArgs.Threads)
+	for p := 0; p < parsedArgs.Threads; p++ {
+		// For every thread
+		go func(mtx *sync.RWMutex, parsedArgs *cliParameter, result *map[string][]urlResponse, splitedUrls *[][]string, thread int) {
+			if parsedArgs.Threads > 1 {
+				log.Printf("Thread %v starts\n", thread)
+			}
+			maxUrlIdx := len((*splitedUrls)[thread])
+			for urlIdx := 0; urlIdx < maxUrlIdx; urlIdx++ {
 				// Perform get request
+				url := (*splitedUrls)[thread][urlIdx]
 				resp, err := performRequest(parsedArgs, url)
 				if err != nil {
 					log.Printf("ERROR: %s", err)
-					return
+					continue
 				}
-
 				err = storeResult(mtx, parsedArgs, resp, result, url)
 				if err != nil {
 					log.Printf("ERROR: %s", err)
-					return
+					continue
 				}
-			}(mtx, parsedArgs, &result, url)
-		} else {
-			// Perform get request sequentiel
-			resp, err := performRequest(parsedArgs, url)
-			if err != nil {
-				log.Printf("ERROR: %s", err)
-				continue
 			}
-
-			err = storeResult(mtx, parsedArgs, resp, &result, url)
-			if err != nil {
-				log.Printf("ERROR: %s", err)
-				continue
+			if parsedArgs.Threads > 1 {
+				log.Printf("Thread %v finished\n", thread)
 			}
-		}
-
+			defer wg.Done()
+		}(mtx, parsedArgs, &result, &splitedUrls, p)
 	}
-
-	if parsedArgs.ParallelRequests {
-		wg.Wait()
-	}
+	wg.Wait()
 
 	return result, nil
 }
@@ -330,6 +345,7 @@ func getSimilarHeaders(collectedResponses map[string][]urlResponse) map[string]b
 const (
 	usage = `usage: %s [files]
 Parse urls and fetch Server banners.
+Version: %s
 
 Options:
 [files] provide the urls in files.
@@ -347,15 +363,15 @@ func main() {
 	host := flag.String("H", "", "Host")
 	jsonOutput := flag.Bool("j", false, "Result as json")
 	maxRetry := flag.Int("m", 3, "Maximum retries for request")
-	parallelRequests := flag.Bool("p", false, "Perform requests in parallel")
+	threads := flag.Int("t", 1, "Threads")
 	responseCode := flag.Bool("r", false, "Include HTTP response code in signature calculation")
 	serverHeader := flag.Bool("s", false, "Include 'Server' response header in signature calculation")
-	timeout := flag.Int("t", 1, "Timeout seconds")
+	timeout := flag.Int("x", 1, "Timeout seconds")
 	useragent := flag.String("u", "", "User-Agent (default GoLang default)")
 	verbose := flag.Bool("v", false, "Verbose output")
 	wait := flag.Int("w", 0, "Wait ms between requests")
 	flag.Usage = func() {
-		log.Printf(usage, os.Args[0])
+		log.Printf(usage, os.Args[0], build)
 		flag.PrintDefaults()
 	}
 	flag.Parse()
@@ -369,10 +385,10 @@ func main() {
 		*host,
 		*jsonOutput,
 		*maxRetry,
-		*parallelRequests,
 		*responseCode,
 		*serverHeader,
 		*timeout,
+		*threads,
 		*useragent,
 		*verbose,
 		*wait}
