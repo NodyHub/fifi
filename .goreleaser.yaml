@@ -4,18 +4,9 @@ builds:
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser-action-v2
     goos:
-      - linux
       - darwin
     goarch:
       - amd64
-      - arm
-      - arm64
-    goamd64:
-      - v2
-      - v3
-    goarm:
-      - 6
-      - 7
 archives:
   - replacements:
       darwin: Darwin
