@@ -1,10 +1,10 @@
 builds:
   - 
     ldflags:
-      - -X github.com/NodyHub/main.version={{.Version}}
-      - -X github.com/NodyHub/main.commit={{.Commit}}
-      - -X github.com/NodyHub/main.date={{.CommitDate}}
-      - -X github.com/NodyHub/main.builtBy=goreleaser-action
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.CommitDate}}
+      - -X main.builtBy=goreleaser-action
     env:
         - CGO_ENABLED=0
     goos:
