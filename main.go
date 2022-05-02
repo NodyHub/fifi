@@ -47,7 +47,12 @@ type cliParameter struct {
 	Wait          int
 }
 
-var build = "dev"
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+	builtBy = "unknown"
+)
 
 // hash calulates the hash value of a given string
 func hash(s string) string {
@@ -344,8 +349,8 @@ func getSimilarHeaders(collectedResponses map[string][]urlResponse) map[string]b
 
 const (
 	usage = `usage: %s [files]
-Parse urls and fetch Server banners.
-Version: %s
+fifi sends to a given list of url's HTTP requests, calculates on each response a signature and groups them based on the values.
+fifi %s, commit %s, built at %s by %s
 
 Options:
 [files] provide the urls in files.
@@ -371,7 +376,7 @@ func main() {
 	verbose := flag.Bool("v", false, "Verbose output")
 	wait := flag.Int("w", 0, "Wait ms between requests")
 	flag.Usage = func() {
-		log.Printf(usage, os.Args[0], build)
+		log.Printf(usage, os.Args[0], version, commit, date, builtBy)
 		flag.PrintDefaults()
 	}
 	flag.Parse()
