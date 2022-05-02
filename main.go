@@ -1,4 +1,4 @@
-package fifi
+package main
 
 import (
 	"bufio"
