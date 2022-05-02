@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -46,13 +47,6 @@ type cliParameter struct {
 	Verbose       bool
 	Wait          int
 }
-
-const (
-	version = "dev"
-	commit  = "none"
-	date    = "unknown"
-	builtBy = "unknown"
-)
 
 // hash calulates the hash value of a given string
 func hash(s string) string {
@@ -350,14 +344,27 @@ func getSimilarHeaders(collectedResponses map[string][]urlResponse) map[string]b
 const (
 	usage = `usage: %s [files]
 fifi sends to a given list of url's HTTP requests, calculates on each response a signature and groups them based on the values.
-fifi %s, commit %s, built at %s by %s
+
+Default reads from stdin
 
 Options:
+--------
 [files] provide the urls in files.
 `
 )
 
 func main() {
+
+	// Read Build Time infos
+	bi, _ := debug.ReadBuildInfo()
+	buildTime := ""
+	for _, v := range bi.Settings {
+		if v.Key == "vcs.time" {
+			buildTime = v.Value
+		}
+	}
+	fifiSource := bi.Main.Path
+	version := bi.Main.Version
 
 	// Read cli param
 	authorization := flag.String("a", "", "Authorization")
@@ -375,8 +382,10 @@ func main() {
 	verbose := flag.Bool("v", false, "Verbose output")
 	wait := flag.Int("w", 0, "Wait ms between requests")
 	flag.Usage = func() {
-		log.Printf(usage, os.Args[0], version, commit, date, builtBy)
+		log.SetFlags(0)
+		log.Printf(usage, os.Args[0])
 		flag.PrintDefaults()
+		log.Printf("\n%s@%s %v\n", fifiSource, version, buildTime)
 	}
 	flag.Parse()
 	input := flag.Args()
