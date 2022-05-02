@@ -358,7 +358,6 @@ Options:
 )
 
 func main() {
-	log.SetOutput(flag.CommandLine.Output())
 
 	// Read cli param
 	authorization := flag.String("a", "", "Authorization")
@@ -397,6 +396,8 @@ func main() {
 		*useragent,
 		*verbose,
 		*wait}
+
+	log.SetOutput(flag.CommandLine.Output())
 
 	// Get URLS
 	var err error
