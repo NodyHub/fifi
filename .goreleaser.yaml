@@ -1,10 +1,10 @@
 builds:
   - 
     ldflags:
-      - -X fifi.version={{.Version}}
-      - -X fifi.commit={{.Commit}}
-      - -X fifi.date={{.CommitDate}}
-      - -X fifi.builtBy=goreleaser-action
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.CommitDate}}
+      - -X main.builtBy=goreleaser-action
     env:
         - CGO_ENABLED=0
     goos:
