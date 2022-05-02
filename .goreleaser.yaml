@@ -1,12 +1,17 @@
 builds:
-  - env:
-      - CGO_ENABLED=0
-    ldflags:
-      - -s -w -X main.build={{.Version}}
+  - ldflags:
+      - -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser-action
     goos:
+      - linux
+      - windows
       - darwin
     goarch:
       - amd64
+      - arm
+      - arm64
+    goarm:
+      - 6
+      - 7
 archives:
   - replacements:
       darwin: Darwin
