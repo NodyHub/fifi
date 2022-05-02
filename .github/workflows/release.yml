@@ -19,6 +19,5 @@ jobs:
         with:
           version: latest
           args: release --rm-dist
-          ldflags: "-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
