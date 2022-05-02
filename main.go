@@ -47,7 +47,7 @@ type cliParameter struct {
 	Wait          int
 }
 
-var (
+const (
 	version = "dev"
 	commit  = "none"
 	date    = "unknown"
