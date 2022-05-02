@@ -1,6 +1,12 @@
 builds:
-  - ldflags:
-      - -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser-action
+  - 
+    ldflags:
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.CommitDate}}
+      - -X main.builtBy=goreleaser-action
+    env:
+        - CGO_ENABLED=0
     goos:
       - linux
       - windows
