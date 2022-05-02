@@ -1,10 +1,10 @@
 builds:
   - 
     ldflags:
-      - -X main.version={{.Version}}
-      - -X main.commit={{.Commit}}
-      - -X main.date={{.CommitDate}}
-      - -X main.builtBy=goreleaser-action
+      - -X github.com/NodyHub/fifi.version={{.Version}}
+      - -X github.com/NodyHub/fifi.commit={{.Commit}}
+      - -X github.com/NodyHub/fifi.date={{.CommitDate}}
+      - -X github.com/NodyHub/fifi.builtBy=goreleaser-action
     env:
         - CGO_ENABLED=0
     goos:
