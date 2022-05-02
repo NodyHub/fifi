@@ -2,7 +2,8 @@ builds:
   - env:
       - CGO_ENABLED=0
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser-action-v2
+      - -s -w -X main.build={{.Version}}
+      - ./usemsan=-msan
     goos:
       - darwin
     goarch:
