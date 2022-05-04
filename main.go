@@ -604,7 +604,7 @@ func main() {
 				for _, u := range urls {
 					fmt.Println(u)
 				}
-				fmt.Println("-----------------------------------\n")
+				fmt.Printf("-----------------------------------\n\n")
 			}
 		}
 	}
