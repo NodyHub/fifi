@@ -39,7 +39,6 @@ type signatureDiff struct {
 type cliParameter struct {
 	Authorization string
 	Cookie        string
-	Crash         bool
 	Diff          string
 	Method        string
 	Host          string
@@ -204,10 +203,6 @@ func performRequest(parsedArgs *cliParameter, url string) (*http.Response, error
 	// Perform get request
 	resp, err := client.Do(req)
 
-	// first at all, check for crash
-	if err != nil && parsedArgs.Crash {
-		return nil, err
-	}
 	//  the other error handling
 	retry := 0
 	for retry < parsedArgs.MaxRetry && err != nil {
@@ -375,7 +370,6 @@ func main() {
 	// Read cli param
 	authorization := flag.String("a", "", "Authorization")
 	cookie := flag.String("c", "", "Cookie")
-	crash := flag.Bool("C", false, "Crash on error")
 	diff := flag.String("diff", "", "Signature diff with json file from previous run")
 	method := flag.String("X", "GET", "Method")
 	host := flag.String("H", "", "Host")
@@ -400,7 +394,6 @@ func main() {
 	parsedArgs := cliParameter{
 		*authorization,
 		*cookie,
-		*crash,
 		*diff,
 		*method,
 		*host,
