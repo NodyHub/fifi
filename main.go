@@ -207,7 +207,7 @@ func performRequest(parsedArgs *cliParameter, url string) (*http.Response, error
 	retry := 0
 	for retry < parsedArgs.MaxRetry && err != nil {
 		log.Printf("ERROR (%v): %s\n", retry, err.Error())
-		if os.IsTimeout(err) || resp.StatusCode == 429 {
+		if os.IsTimeout(err) || (resp != nil && resp.StatusCode == 429) {
 			time.Sleep(time.Second * time.Duration(retry+1))
 		} else {
 			retry = parsedArgs.MaxRetry
