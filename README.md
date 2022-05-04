@@ -55,26 +55,6 @@ Options:
     	Timeout seconds (default 1)
 
 github.com/NodyHub/fifi@0.3.0
-[~/git/fifi]% cat uber.url.lst | fifi -v -t 4 -s
-cat: uber.url.lst: No such file or directory
-2022/05/04 10:57:52 reading from stdin...
-2022/05/04 10:57:52 Collected 0 different urls, starting analysis
-2022/05/04 10:57:52 parsedArgs.ParallelRequests: 4
-2022/05/04 10:57:52 Thread 3 starts
-2022/05/04 10:57:52 Thread 3 finished
-2022/05/04 10:57:52 Thread 2 starts
-2022/05/04 10:57:52 Thread 2 finished
-2022/05/04 10:57:52 Thread 0 starts
-2022/05/04 10:57:52 Thread 0 finished
-2022/05/04 10:57:52 Thread 1 starts
-2022/05/04 10:57:52 Thread 1 finished
-
-Summary:
-===================================
-Headers received in every response:
-===================================
-===================================
-
 [~/git/fifi]% cat ~/uber.url.lst | fifi -v -t 4 -s
 2022/05/04 10:58:04 reading from stdin...
 2022/05/04 10:58:04 Collected 11 different urls, starting analysis
