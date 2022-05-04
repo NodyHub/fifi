@@ -19,7 +19,7 @@ go install github.com/NodyHub/fifi@latest
 ## Usage and example output
 
 ```shell
-[~]% fifi -h
+[~/git/fifi]% fifi -h
 usage: fifi [files]
 fifi sends to a given list of url's HTTP requests, calculates on each response a signature and groups them based on the values.
 
@@ -28,7 +28,6 @@ Default reads from stdin
 Options:
 --------
 [files] provide the urls in files.
-  -C	Crash on error
   -H string
     	Host
   -X string
@@ -37,7 +36,10 @@ Options:
     	Authorization
   -c string
     	Cookie
-  -j	Result as json
+  -diff string
+    	Signature diff with json file from previous run
+  -json
+    	Output json
   -m int
     	Maximum retries for request (default 3)
   -r	Include HTTP response code in signature calculation
@@ -52,48 +54,71 @@ Options:
   -x int
     	Timeout seconds (default 1)
 
-github.com/NodyHub/fifi@v0.2.17
-[~]% cat uber.url.lst | fifi -v -t 4 -s
-2022/05/03 08:29:06 reading from stdin...
-2022/05/03 08:29:06 Collected 11 different urls, starting analysis
-2022/05/03 08:29:06 parsedArgs.ParallelRequests: 4
-2022/05/03 08:29:06 Thread 3 starts
-2022/05/03 08:29:06 Thread 1 starts
-2022/05/03 08:29:06 Thread 0 starts
-2022/05/03 08:29:06 Thread 2 starts
-2022/05/03 08:29:07 1667219945 https://auth.uber.com/
-2022/05/03 08:29:07 2898507639 https://auth.uber.com/login/social
-2022/05/03 08:29:07 1705792451 https://auth.uber.com/login/?breeze_local_zone=dca1&state=0A-OdN1vuv_FDbpofRZqJg9maKASCY4k0kCRVEiSDGw%3D&uber_client_name=riderSignUp&uclick_id=840a8ddd-ac10-47e6-aec4-e492968acc42
-2022/05/03 08:29:07 2898507639 https://auth.uber.com/login/social/
-2022/05/03 08:29:07 Thread 3 finished
-2022/05/03 08:29:07 1705792451 https://auth.uber.com/login/?breeze_local_zone=dca11&next_url=https%3A%2F%2Fm.uber.com%2F&state=NUUybaiHU9SIaKz56QjyvtJTz5CJC25zhhyocPV9guM%3D
-2022/05/03 08:29:07 1705792451 https://auth.uber.com/login/
-2022/05/03 08:29:07 1705792451 https://auth.uber.com/login/session
-2022/05/03 08:29:07 Thread 0 finished
-2022/05/03 08:29:07 1705792451 https://auth.uber.com/login/?next_url=https%3A%2F%2Fm.uber.com%2F&privileged_op_url=https%3A%2F%2Fm.uber.com%2F
-2022/05/03 08:29:07 Thread 2 finished
-2022/05/03 08:29:07 1705792451 https://auth.uber.com/login/social/?from=facebook&state=%7B%22query%22%3A%22%3Fnext_url%3Dhttps%253A%252F%252Fm.uber.com%252F%26privileged_op_url%3Dhttps%253A%252F%252Fm.uber.com%252F%26uber_client_name%3Dm2%22%2C%22csrfToken%22%3A%221650443852-01-FNOsAwdU4I8HWkiFZuimbrTHjauX146ik_Hq9h7k1Ew%22%2C%22app%22%3A%22%22%7D&response_type=token
-2022/05/03 08:29:07 1705792451 https://auth.uber.com/login/social/?next_url=https%3A%2F%2Fm.uber.com%2F&privileged_op_url=https%3A%2F%2Fm.uber.com%2F&uber_client_name=m2
-2022/05/03 08:29:08 ERROR (0): Get "https://auth.uber.com/login": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
-2022/05/03 08:29:09 ERROR (1): Get "https://auth.uber.com/login": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
-2022/05/03 08:29:11 ERROR (2): Get "https://auth.uber.com/login": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
-2022/05/03 08:29:14 ERROR: maxRetry(3) reached, go to next url
-2022/05/03 08:29:14 Thread 1 finished
+github.com/NodyHub/fifi@0.3.0
+[~/git/fifi]% cat uber.url.lst | fifi -v -t 4 -s
+cat: uber.url.lst: No such file or directory
+2022/05/04 10:57:52 reading from stdin...
+2022/05/04 10:57:52 Collected 0 different urls, starting analysis
+2022/05/04 10:57:52 parsedArgs.ParallelRequests: 4
+2022/05/04 10:57:52 Thread 3 starts
+2022/05/04 10:57:52 Thread 3 finished
+2022/05/04 10:57:52 Thread 2 starts
+2022/05/04 10:57:52 Thread 2 finished
+2022/05/04 10:57:52 Thread 0 starts
+2022/05/04 10:57:52 Thread 0 finished
+2022/05/04 10:57:52 Thread 1 starts
+2022/05/04 10:57:52 Thread 1 finished
 
 Summary:
 ===================================
 Headers received in every response:
 ===================================
- - Alt-Svc
- - X-Content-Type-Options
- - Strict-Transport-Security
+===================================
+
+[~/git/fifi]% cat ~/uber.url.lst | fifi -v -t 4 -s
+2022/05/04 10:58:04 reading from stdin...
+2022/05/04 10:58:04 Collected 11 different urls, starting analysis
+2022/05/04 10:58:04 parsedArgs.ParallelRequests: 4
+2022/05/04 10:58:04 Thread 3 starts
+2022/05/04 10:58:04 Thread 2 starts
+2022/05/04 10:58:04 Thread 1 starts
+2022/05/04 10:58:04 Thread 0 starts
+2022/05/04 10:58:04 1705792451 https://auth.uber.com/login/?next_url=https%3A%2F%2Fm.uber.com%2F&privileged_op_url=https%3A%2F%2Fm.uber.com%2F
+2022/05/04 10:58:05 1705792451 https://auth.uber.com/login
+2022/05/04 10:58:05 1705792451 https://auth.uber.com/login/social/?from=facebook&state=%7B%22query%22%3A%22%3Fnext_url%3Dhttps%253A%252F%252Fm.uber.com%252F%26privileged_op_url%3Dhttps%253A%252F%252Fm.uber.com%252F%26uber_client_name%3Dm2%22%2C%22csrfToken%22%3A%221650443852-01-FNOsAwdU4I8HWkiFZuimbrTHjauX146ik_Hq9h7k1Ew%22%2C%22app%22%3A%22%22%7D&response_type=token
+2022/05/04 10:58:05 1705792451 https://auth.uber.com/login/?breeze_local_zone=dca11&next_url=https%3A%2F%2Fm.uber.com%2F&state=NUUybaiHU9SIaKz56QjyvtJTz5CJC25zhhyocPV9guM%3D
+2022/05/04 10:58:05 1705792451 https://auth.uber.com/login/
+2022/05/04 10:58:05 1705792451 https://auth.uber.com/login/session
+2022/05/04 10:58:05 Thread 2 finished
+2022/05/04 10:58:05 1705792451 https://auth.uber.com/login/?breeze_local_zone=dca1&state=0A-OdN1vuv_FDbpofRZqJg9maKASCY4k0kCRVEiSDGw%3D&uber_client_name=riderSignUp&uclick_id=840a8ddd-ac10-47e6-aec4-e492968acc42
+2022/05/04 10:58:05 Thread 1 finished
+2022/05/04 10:58:05 ERROR (0): Get "https://auth.uber.com/login/social": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
+2022/05/04 10:58:06 ERROR (0): Get "https://auth.uber.com/login/social/?next_url=https%3A%2F%2Fm.uber.com%2F&privileged_op_url=https%3A%2F%2Fm.uber.com%2F&uber_client_name=m2": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
+2022/05/04 10:58:06 ERROR (1): Get "https://auth.uber.com/login/social": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
+2022/05/04 10:58:07 ERROR (1): Get "https://auth.uber.com/login/social/?next_url=https%3A%2F%2Fm.uber.com%2F&privileged_op_url=https%3A%2F%2Fm.uber.com%2F&uber_client_name=m2": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
+2022/05/04 10:58:08 ERROR (2): Get "https://auth.uber.com/login/social": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
+2022/05/04 10:58:09 ERROR (2): Get "https://auth.uber.com/login/social/?next_url=https%3A%2F%2Fm.uber.com%2F&privileged_op_url=https%3A%2F%2Fm.uber.com%2F&uber_client_name=m2": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
+2022/05/04 10:58:11 ERROR: maxRetry(3) reached, go to next url
+2022/05/04 10:58:11 2898507639 https://auth.uber.com/login/social/
+2022/05/04 10:58:11 1667219945 https://auth.uber.com/
+2022/05/04 10:58:11 Thread 0 finished
+2022/05/04 10:58:12 ERROR: maxRetry(3) reached, go to next url
+2022/05/04 10:58:12 Thread 3 finished
+
+Summary:
+===================================
+Headers received in every response:
+===================================
  - X-Frame-Options
  - X-Xss-Protection
- - Content-Type
- - Server
- - Vary
- - Cache-Control
+ - Alt-Svc
  - Date
+ - Server
+ - Strict-Transport-Security
+ - Cache-Control
+ - Vary
+ - X-Content-Type-Options
+ - Content-Type
  - Via
  - X-Envoy-Upstream-Service-Time
  - X-Uber-Edge
@@ -122,17 +147,17 @@ Additional headers:
  - X-Webkit-Csp
 
 Urls:
+[200] https://auth.uber.com/login
 [200] https://auth.uber.com/login/
 [200] https://auth.uber.com/login/?breeze_local_zone=dca1&state=0A-OdN1vuv_FDbpofRZqJg9maKASCY4k0kCRVEiSDGw%3D&uber_client_name=riderSignUp&uclick_id=840a8ddd-ac10-47e6-aec4-e492968acc42
 [200] https://auth.uber.com/login/?breeze_local_zone=dca11&next_url=https%3A%2F%2Fm.uber.com%2F&state=NUUybaiHU9SIaKz56QjyvtJTz5CJC25zhhyocPV9guM%3D
 [200] https://auth.uber.com/login/?next_url=https%3A%2F%2Fm.uber.com%2F&privileged_op_url=https%3A%2F%2Fm.uber.com%2F
 [200] https://auth.uber.com/login/session
 [200] https://auth.uber.com/login/social/?from=facebook&state=%7B%22query%22%3A%22%3Fnext_url%3Dhttps%253A%252F%252Fm.uber.com%252F%26privileged_op_url%3Dhttps%253A%252F%252Fm.uber.com%252F%26uber_client_name%3Dm2%22%2C%22csrfToken%22%3A%221650443852-01-FNOsAwdU4I8HWkiFZuimbrTHjauX146ik_Hq9h7k1Ew%22%2C%22app%22%3A%22%22%7D&response_type=token
-[200] https://auth.uber.com/login/social/?next_url=https%3A%2F%2Fm.uber.com%2F&privileged_op_url=https%3A%2F%2Fm.uber.com%2F&uber_client_name=m2
 -----------------------------------
 
 -----------------------------------
-Signature: 2898507639 ; URLs: 2
+Signature: 2898507639 ; URLs: 1
 Additional headers:
  - Content-Security-Policy
  - Etag
@@ -144,7 +169,6 @@ Additional headers:
  - X-Webkit-Csp
 
 Urls:
-[404] https://auth.uber.com/login/social
 [404] https://auth.uber.com/login/social/
 -----------------------------------
 
