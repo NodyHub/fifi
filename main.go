@@ -31,10 +31,16 @@ type urlResponse struct {
 	Status        string
 }
 
+type signatureDiff struct {
+	OldResponse *urlResponse
+	NewResponse *urlResponse
+}
+
 type cliParameter struct {
 	Authorization string
 	Cookie        string
 	Crash         bool
+	Diff          string
 	Method        string
 	Host          string
 	JsonOutput    bool
@@ -230,8 +236,8 @@ func storeResult(mtx *sync.RWMutex, parsedArgs *cliParameter, resp *http.Respons
 		parsedResponse := urlResponse{url, headers, resp.StatusCode, resp.Status}
 		sig := getResponseSignature(parsedArgs, &parsedResponse)
 
-		if mtx != nil {
-			mtx.RLock()
+		for mtx != nil && mtx.TryLock() != true {
+			time.Sleep(time.Millisecond * 1)
 		}
 		if _, exist := (*result)[sig]; exist {
 			(*result)[sig] = append((*result)[sig], parsedResponse)
@@ -242,7 +248,7 @@ func storeResult(mtx *sync.RWMutex, parsedArgs *cliParameter, resp *http.Respons
 			log.Printf("%s %s\n", sig, url)
 		}
 		if mtx != nil {
-			mtx.RUnlock()
+			mtx.Unlock()
 		}
 	}
 
@@ -370,9 +376,10 @@ func main() {
 	authorization := flag.String("a", "", "Authorization")
 	cookie := flag.String("c", "", "Cookie")
 	crash := flag.Bool("C", false, "Crash on error")
+	diff := flag.String("diff", "", "Signature diff with json file from previous run")
 	method := flag.String("X", "GET", "Method")
 	host := flag.String("H", "", "Host")
-	jsonOutput := flag.Bool("j", false, "Result as json")
+	jsonOutput := flag.Bool("json", false, "Output json")
 	maxRetry := flag.Int("m", 3, "Maximum retries for request")
 	threads := flag.Int("t", 1, "Threads")
 	responseCode := flag.Bool("r", false, "Include HTTP response code in signature calculation")
@@ -394,6 +401,7 @@ func main() {
 		*authorization,
 		*cookie,
 		*crash,
+		*diff,
 		*method,
 		*host,
 		*jsonOutput,
@@ -450,6 +458,112 @@ func main() {
 			log.Fatal(err)
 		}
 		fmt.Printf(string(b))
+	} else if len(*diff) > 0 {
+		dat, err := os.ReadFile(*diff)
+		if err != nil {
+			log.Fatal(err)
+		}
+		var oldData map[string][]urlResponse
+		json.Unmarshal([]byte(dat), &oldData)
+		var diffResult []signatureDiff
+		for sig, responses := range res {
+			for _, resp := range responses {
+				var diffAgainst *urlResponse = nil
+				for _, oldResponses := range oldData {
+					for _, oldResp := range oldResponses {
+						// Search for the url in old results
+						if diffAgainst == nil && resp.Url == oldResp.Url {
+							diffAgainst = &oldResp
+							break
+						}
+					}
+					// Check the signature for found old response
+
+					if diffAgainst != nil {
+						oldSig := getResponseSignature(&parsedArgs, diffAgainst)
+						if sig != oldSig {
+							diffResult = append(diffResult, signatureDiff{diffAgainst, &resp})
+							break
+						}
+					}
+				}
+				// check if the url is not found at all in the old Data
+				if diffAgainst == nil {
+					diffResult = append(diffResult, signatureDiff{nil, &resp})
+				}
+			}
+		}
+		if len(diffResult) > 0 {
+			fmt.Printf("Found %v changes: \n", len(diffResult))
+			for _, dr := range diffResult {
+				if dr.OldResponse == nil {
+					fmt.Printf("%s is new\n", dr.NewResponse.Url)
+				} else {
+					fmt.Printf("%s signature change\n", dr.NewResponse.Url)
+					newHeader := dr.NewResponse.HeaderEntries
+					oldHeader := dr.OldResponse.HeaderEntries
+					// get number of header entries
+					hdrEntLen := len(newHeader)
+					if hdrEntLen < len(oldHeader) {
+						hdrEntLen = len(oldHeader)
+					}
+					// get length of request headers
+					maxKeyLen := 0
+					for _, hdr := range newHeader {
+						if len(hdr.Key) > maxKeyLen {
+							maxKeyLen = len(hdr.Key)
+						}
+					}
+					for _, hdr := range oldHeader {
+						if len(hdr.Key) > maxKeyLen {
+							maxKeyLen = len(hdr.Key)
+						}
+					}
+					outputStrgFmt := fmt.Sprintf("%%%vs | %%-%vs\n", maxKeyLen, maxKeyLen)
+
+					fmt.Println(strings.Repeat("=", (maxKeyLen*2 + 3)))
+					fmt.Printf(outputStrgFmt, "Parsed Values", "Received Values")
+
+					if parsedArgs.ServerHeader {
+						oldSrvHdr := ""
+						for _, hdr := range oldHeader {
+							if hdr.Key == "Server" {
+								oldSrvHdr = hdr.Value
+							}
+						}
+						newSrvHdr := ""
+						for _, hdr := range newHeader {
+							if hdr.Key == "Server" {
+								oldSrvHdr = hdr.Value
+							}
+						}
+						fmt.Println(strings.Repeat("-", (maxKeyLen*2 + 3)))
+						fmt.Println("Server Header")
+						fmt.Println(strings.Repeat("-", (maxKeyLen*2 + 3)))
+						fmt.Printf(outputStrgFmt, oldSrvHdr, newSrvHdr)
+					}
+					fmt.Println(strings.Repeat("-", (maxKeyLen*2 + 3)))
+					fmt.Println("Headers")
+					fmt.Println(strings.Repeat("-", (maxKeyLen*2 + 3)))
+					for i := 0; i < hdrEntLen; i++ {
+						old := ""
+						if i < len(oldHeader) {
+							old = oldHeader[i].Key
+						}
+						new := ""
+						if i < len(newHeader) {
+							new = newHeader[i].Key
+						}
+
+						fmt.Printf(outputStrgFmt, old, new)
+					}
+					fmt.Println(strings.Repeat("=", (maxKeyLen*2 + 3)))
+				}
+			}
+		} else {
+			// no diff detected
+		}
+
 	} else {
 		fmt.Println("\nSummary:")
 		// Iterate over headers that are existent in every request
